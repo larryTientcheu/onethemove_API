@@ -5,7 +5,8 @@ from bson.json_util import dumps
 from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from resources.users import Users
+#from resources.users import Users
+from resources.users import setMongo,Users,User
 
 
 app = Flask(__name__)
@@ -15,19 +16,10 @@ api = Api(app)
 app.config['MONGO_URI'] = "mongodb://localhost:27017/quickmunch"
 m = PyMongo(app)
 
-@app.errorhandler(404)
-def not_found(error=None):
-    message = {
-        'status': 404,
-        'message': 'Not found ' + request.url
-    }
-    resp = jsonify(message)
-    resp.status_code = 404
+setMongo(m)
+api.add_resource(Users,"/users")
+api.add_resource(User, "/user/<string:id>")
 
-    return resp
-
-Users.setMongo(m)
-api.add_resource(Users,"/users/new")
 
 
 if __name__ == '__main__':
