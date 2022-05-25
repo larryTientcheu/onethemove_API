@@ -1,5 +1,7 @@
 from re import escape
 import sys
+import json
+from bson import json_util
 from flask import jsonify
 from flask.globals import request
 from flask_restful import Resource, abort
@@ -8,10 +10,13 @@ from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
-def setMongo(mongo):
+
+def User_setMongo(mongo):
     global m
     m = mongo
     m = m.db.users
+
+
 
 
 class Users(Resource):
@@ -35,14 +40,13 @@ class Users(Resource):
         users = Users.get(self)
 
         _json = request.json
+        print(_json)
         _fname = _json['first_name']
         _lname = _json['last_name']
         _email = _json['email']
         #_birthday = _json['birthday']
         _pwd = _json['password']
         
-        '''_loc = [_json['lat'],_json['lon']]
-        _address = {'neighbourhood': _json['neighbourhood'], 'town': _json['town'], 'loc':_loc}'''
         _address1 = {} #Empty address on creation of user
         _address2 = {}
         _cart = []
@@ -53,7 +57,7 @@ class Users(Resource):
             _hashed_pwd = generate_password_hash(_pwd)
             id = m.insert(
                 {'address1': _address1,'address2': _address2, 'first_name': _fname, 'last_name': _lname, 'email': _email, 'password': _hashed_pwd, 'cart': _cart})
-            # print(id)
+            # the above line inserts the elements in the database if the user doesn't exist
 
         resp = jsonify(dumps(id))
         resp.status_code = 200
@@ -67,6 +71,7 @@ class User(Resource):
         users = m.find_one({'_id': ObjectId(id)})
         resp = dumps(users)
         return resp
+
 
     def put(self, id):
 
@@ -83,56 +88,42 @@ class User(Resource):
 
         # DELETE Will be done
 
-
-class Address1(Resource):
-    def get(self, id):
+def formatAddress(_json): # This json is a basic json object look at notes
+    _loc = [_json['lat'], _json['lon']]
+    _address = {'neighbourhood': _json['neighbourhood'],
+    'town': _json['town'], 'loc':_loc}
+         
+    return _address
+class U_Address(Resource):
+    def get(self, id, a):
         user = m.find_one({'_id': ObjectId(id)})
-        # print(user['address1'])
-        address = user['address1']
+        if a == 1:
+            address = user['address1']
+        else:
+            address = user['address2']
 
         resp = dumps(address)
         return resp
 
-    def put(self, id):  # Updates or creat a new address1
+    def put(self, id, a):  # Updates or create a new address1
         _json = request.json
-        _loc = [_json['lat'], _json['lon']]
-        _address = {'neighbourhood': _json['neighbourhood'],
-                     'town': _json['town'], 'loc':_loc}
+        _address = formatAddress(_json)
                     
-        print(_address)
-
-        address = m.find_one_and_update(
-            {'_id': ObjectId(id)},
-            {'$set': {'address1': _address}},
-            {'returnNewDocument': 'true'}
-        )
-
-        resp = dumps(address)
-        return resp
-
-
-class Address2(Resource):
-    def get(self, id):
-        user = m.find_one({'_id': ObjectId(id)})
-        # print(user['address1'])
-        address = user['address2']
+        if a == 1:
+            address = m.find_one_and_update(
+                {'_id': ObjectId(id)},
+                {'$set': {'address1': _address}},
+                {'returnNewDocument': 'true'}
+            )
+        else:
+            address = m.find_one_and_update(
+                {'_id': ObjectId(id)},
+                {'$set': {'address2': _address}},
+                {'returnNewDocument': 'true'}
+            )
 
         resp = dumps(address)
         return resp
 
-    def put(self, id):  # Updates or creat a new address1
-        _json = request.json
-        _loc = [_json['lat'], _json['lon']]
-        _address = {'neighbourhood': _json['neighbourhood'],
-                     'town': _json['town'], 'loc':_loc}
-                    
-        print(_address)
 
-        address = m.find_one_and_update(
-            {'_id': ObjectId(id)},
-            {'$set': {'address2': _address}},
-            {'returnNewDocument': 'true'}
-        )
-
-        resp = dumps(address)
-        return resp
+# FORMAT CART
