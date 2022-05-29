@@ -1,10 +1,8 @@
 from re import escape
-import sys
 from flask import jsonify
 from flask.globals import request
-from flask.json import dump
 from flask_restful import Resource, abort
-from bson.json_util import default, dumps
+from bson.json_util import dumps
 from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -26,7 +24,6 @@ class Restaurants(Resource):
             abort(404, message="Could not find Restaurant...")
 
     def abort_if_exist(self, email, restaurant):
-
         if email in restaurant:
             abort(409, message="Restaurant already exists with that email ...")
     
@@ -51,7 +48,8 @@ class Restaurants(Resource):
         _delivery_time = 0
         _min_price = 0
         _meals = []
-        _img = ""
+        _imgs = []
+        _city = ""
         _feedback = {}
 
 
@@ -62,7 +60,7 @@ class Restaurants(Resource):
             id = m.insert(
                 {'address':_address, 'name': _name, 'description': _description, 'email': _email, 'password': _hashed_pwd,
                 'likes': _likes, 'tags': _tags, 'availability': _availability, ' drinks': _drinks,
-                'delivery_time':_delivery_time, 'min_price':_min_price, 'meals': _meals, 'img': _img,
+                'delivery_time':_delivery_time, 'min_price':_min_price, 'meals': _meals, 'img': _imgs, 'city': _city,
                 'feedback':_feedback
                 }
             )
@@ -93,4 +91,23 @@ class Restaurant(Resource):
         return resp
 
         #DELETE WILL BE DONE
+
+def formatRestaurantAddress(_json):
+    _loc = [_json['lat'], _json['lon']]
+    _address = {'manager_name': _json['manager_name'], 'restaurant_phone': _json['restaurant_phone'],
+    'manager_phone': _json['manager_phone'], 'neighbourhood': _json['neighbourhood'],
+    'town': _json['town'], 'loc':_loc}
+
+    return _address
+
+def formatAvailability(_json):
+    _availability = {'mon': _json['mon'], 'tue': _json['tue'], 'wed': _json['wed'], 'thur': _json['thur'],
+    'fri': _json['fri'], 'sat': _json['sat'], 'sun': _json['sun']}
+
+    return _availability
+
+def formatDrinks(_json):
+    _drink = {'name': _json['dname'], 'price':_json['dprice']}
+    return _drink
+
 

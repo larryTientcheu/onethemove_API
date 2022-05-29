@@ -8,8 +8,10 @@ from flask_restful import Resource, abort
 from bson.json_util import default, dumps
 from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
+from codes.functions import Functions
 
 
+func = Functions()
 
 def User_setMongo(mongo):
     global m
@@ -26,35 +28,29 @@ class Users(Resource):
         resp = dumps(users)
         return resp
 
-    def abort_if_not_exist(self, email, users):
-        if email not in users['email']:
-            abort(404, message="Could not find user...")
-
-    def abort_if_exist(self, email, users):
-
-        if email in users:
-            abort(409, message="User already exists with that email ID...")
 
     # Seperate create user and adress(Personal resource and also for cart)
     def post(self):  # add
-        users = Users.get(self)
 
         _json = request.json
-        print(_json)
         _fname = _json['first_name']
         _lname = _json['last_name']
         _email = _json['email']
         #_birthday = _json['birthday']
         _pwd = _json['password']
-        
         _address1 = {} #Empty address on creation of user
         _address2 = {}
         _cart = []
 
-        Users.abort_if_exist(self, _email, users)
+        users = m.find_one({'email': _email})
+        # #Checks the string dumps
+        # func.abort_if_exist(_email, users)
+
+        # Check the one file returned from databas
+        func.abort_if_exist(users)
 
         if (_fname or _lname) and _email and _pwd:
-            _hashed_pwd = generate_password_hash(_pwd)
+            _hashed_pwd = func.hashPassword(_pwd)
             id = m.insert(
                 {'address1': _address1,'address2': _address2, 'first_name': _fname, 'last_name': _lname, 'email': _email, 'password': _hashed_pwd, 'cart': _cart})
             # the above line inserts the elements in the database if the user doesn't exist
