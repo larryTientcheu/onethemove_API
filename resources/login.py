@@ -17,17 +17,18 @@ def Login_setMongo(mongo):
 
 class Login(Resource):
 
-    def get(self):
+    def post(self):
         _json = request.json
         _email = _json['email']
         users = m.find_one({'email': _email})
         _password = _json['password']
         if users is None:
-            abort(404, message="No user exists with this email address")
+            abort(404, message="No user exists with this Email address")
         else:
             if func.checkPassword(users['password'], _password):
                 users.pop('password')
                 return dumps(users)
-            else: return False
+            else: 
+                abort(404, message="Incorrect Email or Password")
             
 

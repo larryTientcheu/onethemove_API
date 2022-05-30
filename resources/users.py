@@ -2,7 +2,7 @@ from re import escape
 import sys
 import json
 from bson import json_util
-from flask import jsonify
+from flask import jsonify, make_response
 from flask.globals import request
 from flask_restful import Resource, abort
 from bson.json_util import default, dumps
@@ -27,6 +27,7 @@ class Users(Resource):
         users = m.find()
         resp = dumps(users)
         return resp
+        # return make_response(resp, 200)
 
 
     # Seperate create user and adress(Personal resource and also for cart)

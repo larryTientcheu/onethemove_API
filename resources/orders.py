@@ -1,6 +1,7 @@
 from bson.json_util import dumps
 from bson.objectid import ObjectId
 from flask_restful import Resource
+from requests import request
 
 
 def Order_setMongo(mongo):
@@ -13,6 +14,13 @@ class Orders(Resource):
         orders = m.find()
         resp = dumps(orders)
         return resp
+
+    def post(self):
+        _json = request.json
+        _user = _json['user']
+        _address = _json['address']
+        _item = {'restaurant': _json['restaurant'], 
+        'menu':{'drink': _json['drink'], 'meal': _json['meal']}}
 
 class Order(Resource):
     def get (self, id):
