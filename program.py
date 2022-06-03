@@ -22,7 +22,7 @@ app.config['MONGO_URI'] = "mongodb://localhost:27017/quickmunch"
 m = PyMongo(app)
 
 User_setMongo(m)
-api.add_resource(Users,"/users") # get and add users
+api.add_resource(Users,"/user") # get and add users
 api.add_resource(User, "/user/<string:id>") # get a specific user and update
 api.add_resource(U_Address, "/user/address/<string:id>/<int:a>") # get and update adrress, last argument specifies which address
 
@@ -41,3 +41,6 @@ api.add_resource(Login, "/login")
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+# Put all the requests in a try catch to make sure they are valid requests

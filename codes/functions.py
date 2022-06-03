@@ -14,15 +14,12 @@ class Functions:
         result = check_password_hash(hashed, password)
         return result
 
-    # def abort_if_not_exist(self, users):
-    #     if users is None:
-    #         abort(404, message="No user exists with this email address")
+    def abort_if_exist(self, resource):
+        if resource is not None:
+            abort(409, message="This resource already exists with that email ID...")
 
-    # String dump check
-    # def abort_if_exist(self, email, users):
-    #     if email in users:
-    #         abort(409, message="User already exists with that email ID...")
 
-    def abort_if_exist(self, users):
-        if users is not None:
-            abort(409, message="User already exists with that email ID...")
+    def abort_if_not_exist(self, resource):
+        if resource is None:
+            abort(404, message="This resource doesn't exists")
+    
