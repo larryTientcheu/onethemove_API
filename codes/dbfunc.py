@@ -9,8 +9,8 @@ def addDrink(_json):
 
 def updateDrinks(_json):
     # A drink comes in as an object.
-    operation = {'$set': {"drinks.$[elem]":_json['drinks']}}
-    arrayFilters = [{"elem.name": {'$eq':_json['drinks']['name']}}]
+    operation = {'$set': {"drinks.$[elem]":_json['drink']}}
+    arrayFilters = [{"elem.name": {'$eq':_json['drink']['name']}}]
     return operation, arrayFilters
 
 def addMeal(_json):
@@ -29,22 +29,25 @@ def formatFeedback(_json):
     return _feedback
 
 def updateMeal(m, id, _json):
-    print('sdasds')
-    if 'feedbacks'  in _json.keys():
-        _json['meal']['feedbacks'] = []
-        operation ={'$set': {"meals.$[elem]": _json['meal']}}
-        arrayFilters = [{"elem.name": {'$eq': _json['meal']['name']}}]
-        resp = query.updateRestaurant(m, id, operation, arrayFilters)
 
-        #_feedbacks = formatFeedback(_json)
-        #_json['feedback'] = _feedbacks
-        operation = addFeedback(_json['feedbacks'])
-        # arrayFilters = [{"elem.name.feedbacks.elem1.comment": {'$eq': _json['feedback']['comment']}}]
-        resp = query.updateRestaurant(m, id, operation, [])
+    _json['meal']['feedbacks'] = []
+    operation ={'$set': {"meals.$[elem]": _json['meal']}}
+    arrayFilters = [{"elem.name": {'$eq': _json['meal']['name']}}]
+    resp = query.updateRestaurant(m, id, operation, arrayFilters)
+
+    operation = addMealImg(_json['imgs'])
+    resp = query.updateRestaurant(m, id, operation, [])
+
+    operation = addFeedback(_json['feedbacks'])
+    resp = query.updateRestaurant(m, id, operation, [])
     
     return resp
 
 def addFeedback(_json):
     # json feedback is an array
     operation = {'$set': {"meals.$[].feedbacks":_json}}
+    return operation
+
+def addMealImg(_json):
+    operation = {'$set':{"meals.$[].imgs":_json}}
     return operation

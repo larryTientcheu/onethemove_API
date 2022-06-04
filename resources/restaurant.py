@@ -85,13 +85,12 @@ def formatAvailability(_json):
 
 
 
-def formatImgs(_json):
-    _restaurantEmail = _json['email']
-    _imgs = []
-    for i in _json['imgs']:
-        _imgs.append("{}/{}".format(_restaurantEmail,_json['imgs'][i]))
+# def formatImgs(_restaurantEmail, _json):
+#     _imgs = []
+#     for i in _json['imgs']:
+#         _imgs.append("{}/{}".format(_restaurantEmail,_json['imgs'][i]))
     
-    return _imgs
+#     return _imgs
 
 
 class Restaurant(Resource):
@@ -130,16 +129,16 @@ class Restaurant(Resource):
             _json['availability'] = _availability
         
         
-        if 'meal' not in _json.keys() and 'drinks'  not in _json.keys() and 'imgs' not in _json.keys():
+        if 'meal' not in _json.keys() and 'drink'  not in _json.keys() and 'imgs' not in _json.keys():
             operation = {'$set': _json}
             arrayFilters = []
         else:
-            if 'drinks' in _json.keys():
+            if 'drink' in _json.keys():
                 operation, arrayFilters = dbfunc.updateDrinks(_json)
             # elif 'imgs' in _json.keys():
             #     _imgs = formatImgs(_json)
             #     operation = {'$addToSet': {"imgs":{'$each':_imgs}}} #for image
-            elif 'meal' in _json.keys():
+            elif 'meal' in _json.keys() and 'feedbacks' in _json.keys():
                 resp = dbfunc.updateMeal(m, id, _json)
                 # resp = dbfunc.updateMeal(m, id, _json)
         
