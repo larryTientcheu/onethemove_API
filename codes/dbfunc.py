@@ -1,53 +1,136 @@
+from email import message
+
+from sqlalchemy import null
 import codes.queries as query
 from bson.objectid import ObjectId
 from datetime import datetime
+from flask_restful import Resource, abort
+from werkzeug.security import generate_password_hash, check_password_hash
+from codes.functions import Functions
+func = Functions()
 
-def addDrink(_json):
-    # A drink comes in as an object. added one at a time
-    operation = {'$addToSet': {"drinks":{'$each': [_json['drinks']]}}}
-    return operation
 
-def updateDrinks(_json):
-    # A drink comes in as an object.
-    operation = {'$set': {"drinks.$[elem]":_json['drink']}}
-    arrayFilters = [{"elem.name": {'$eq':_json['drink']['name']}}]
-    return operation, arrayFilters
+class  RestaurantFunctions():
+    def formatAddRestaurant(self, m, _json):
+        if 'email' not in _json.keys() or 'name' not in _json.keys() or 'password' not in _json.keys():
+            abort(400, message='The request is not formated correctly')
+        _email = _json['email']
+        restaurants = m.find_one({'email': _email})
+        func.abort_if_exist(restaurants)
+        _name = _json['name']
+        _description = _json['description']
+        _pwd = _json['password']
+        _tags = _json['tags']
+        
+        # All the feilds below this will be empty on creation. Will be updated on later
 
-def addMeal(_json):
-    _json['meal']['feedback'] = []
-    _json['meal']['img'] = []
-    operation = {'$addToSet': {'meals': {'$each': [_json['meal']]}}}
-    return operation
+        if not _name or not _email or not _pwd:
+            abort(400, message="The request is not formated correctly name email and restaurant")
+        else:
+            _hashed_pwd = generate_password_hash(_pwd)
+            restaurant = {'name': _name, 'description': _description, 'email': _email, 'password': _hashed_pwd,
+                'tags': _tags
+                }
+            return restaurant
 
-def formatFeedback(_json):
-    _user = ObjectId(_json['feedback']['user'])
-    _rating = _json['feedback']['rating']
-    _comment = _json['feedback']['comment']
-    _date = datetime.now()
-    
-    _feedback = {'user':_user, 'rating':_rating, 'comment':_comment, 'date':_date}
-    return _feedback
+    def formatUpdateRestaurant(self, _json):
+            if 'email' not in _json.keys() or 'name' not in _json.keys() or 'password' not in _json.keys():
+                abort(400, message='The request is not formated correctly')
+            _email = _json['email']
+            _name = _json['name']
+            _description = _json['description']
+            _pwd = _json['password']
+            _tags = _json['tags']
+            
+            # All the feilds below this will be empty on creation. Will be updated on later
 
-def updateMeal(m, id, _json):
+            if not _name or not _email or not _pwd:
+                abort(400, message="The request is not formated correctly name email and restaurant")
+            else:
+                _hashed_pwd = generate_password_hash(_pwd)
+                restaurant = {'name': _name, 'description': _description, 'email': _email, 'password': _hashed_pwd,
+                    'tags': _tags
+                    }
+                return restaurant
 
-    _json['meal']['feedbacks'] = []
-    operation ={'$set': {"meals.$[elem]": _json['meal']}}
-    arrayFilters = [{"elem.name": {'$eq': _json['meal']['name']}}]
-    resp = query.updateRestaurant(m, id, operation, arrayFilters)
+    def formatRestaurantAddress(self, _json):
+        if 'address' in _json.keys():
+            _loc = [_json['address']['lat'], _json['address']['lon']]
+            _address = {'manager_name': _json['address']['manager_name'], 'restaurant_phone': _json['address']['restaurant_phone'],
+            'manager_phone': _json['address']['manager_phone'], 'neighbourhood': _json['address']['neighbourhood'],
+            'town': _json['address']['town'], 'loc':_loc}
+        
+        else:
+            abort(400, message="The request address is not formated correctly")
 
-    operation = addMealImg(_json['imgs'])
-    resp = query.updateRestaurant(m, id, operation, [])
+        return _address
 
-    operation = addFeedback(_json['feedbacks'])
-    resp = query.updateRestaurant(m, id, operation, [])
-    
-    return resp
+    def formatRestaurantAvailability(self, _json):
+        if 'availability' in _json.keys():
+            _availability = {'mon': _json['availability']['mon'], 'tue': _json['availability']['tue'],
+            'wed': _json['availability']['wed'], 'thur': _json['availability']['thur'],
+            'fri': _json['availability']['fri'], 'sat': _json['availability']['sat'],
+            'sun': _json['availability']['sun']}
+        else:
+            abort(400, message="The request availability is not formated correctly")
 
-def addFeedback(_json):
-    # json feedback is an array
-    operation = {'$set': {"meals.$[].feedbacks":_json}}
-    return operation
+        return _availability
 
-def addMealImg(_json):
-    operation = {'$set':{"meals.$[].imgs":_json}}
-    return operation
+    def updateDrinks(self, _json):
+        # A drink comes in as an array of drinks. Replaces everything same as add Drink.
+        if 'drinks' in _json.keys():
+            operation = {'$set': {"drinks": _json['drinks']}}
+            return operation
+        else:
+            abort(400, message="The request drinks is not formated correctly")
+
+    def formatImgs(self, id, images):
+        _imgs = []
+        print()
+        for i in images:
+            _imgs.append("{}/{}".format(id,i))
+        
+        return _imgs
+
+    def updateImgs(self, id,_json):
+        # Same Function for add 
+        if 'imgs' in _json.keys():
+            imgs = self.formatImgs(id, _json['imgs'])
+            operation = {'$set': {"imgs": imgs}}
+            return operation
+        
+
+    def addMeal(self, _json):
+        _json['meal']['feedback'] = []
+        _json['meal']['img'] = []
+        operation = {'$addToSet': {'meals': {'$each': [_json['meal']]}}}
+        return operation
+
+    def formatFeedback(self, _json):
+
+        feedback = []
+        # add Checks for rating
+        for i in _json:
+            _user = ObjectId(i['user'])
+            _rating = i['rating']
+            _comment = i['comment']
+            _date = datetime.now()
+            feedback.append({'user':_user, 'rating':_rating, 'comment':_comment, 'date':_date})
+
+        return feedback
+
+    def updateFeedback(self, meal_index, _json):
+        # json feedback is an array
+        if "feedbacks" not in _json.keys():
+            abort(400, message="The request feedback is not formated correctly")
+
+        _feedback = self.formatFeedback(_json['feedbacks'])
+        operation = {'$addToSet': {"meals.{}.feedbacks".format(meal_index):{'$each': _feedback}}}
+        return operation
+
+    def updateMealImg(self, meal_index, _json):
+        if "imgs" not in _json.keys():
+            abort(400, message="The request feedback is not formated correctly")
+        
+        operation = {'$set':{"meals.{}.imgs".format(meal_index): _json['imgs']}}
+        return operation

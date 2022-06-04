@@ -7,8 +7,8 @@ from bson.json_util import dumps
 from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
 from codes.functions import Functions
-import codes.dbfunc as dbfunc
-import codes.queries as query
+from codes.dbfunc import RestaurantFunctions
+from codes.queries import RestaurantQueries
 
 
 def Restaurant_setMongo(mongo):
@@ -17,6 +17,8 @@ def Restaurant_setMongo(mongo):
     m = m.db.restaurant
 
 func = Functions()
+rFuncs = RestaurantFunctions()
+rQueries = RestaurantQueries()
 
 
 class Restaurants(Resource):
@@ -25,126 +27,82 @@ class Restaurants(Resource):
         resp = dumps(restaurant)
         return make_response(resp, 200)
 
-    
     def post(self):
-
         _json = request.json
-        if 'email' not in _json.keys() and 'name' not in _json.keys() and 'password' not in _json.keys():
-            abort(400, message='The request is not formated correctly')
-        _email = _json['email']
-        restaurants = m.find_one({'email': _email})
-        func.abort_if_exist(restaurants)
-        _name = _json['name']
-        _description = _json['description']
-        _pwd = _json['password']
-        _tags = _json['tags']
-        
-
-        # All the feilds below this will be empty on creation. Will be updated on later
-        # Add seperate resource for add drinks meals etc
-        _availability = {}
-        _address = {}
-        _drinks = []
-        _delivery_time = 0
-        _meals = []
-        _imgs = []
-        _feedback = {}
-
-        if _name and _email and _pwd:
-            _hashed_pwd = generate_password_hash(_pwd)
-            id = m.insert(
-                {'address':_address, 'name': _name, 'description': _description, 'email': _email, 'password': _hashed_pwd,
-                'tags': _tags, 'availability': _availability, ' drinks': _drinks,
-                'delivery_time':_delivery_time, 'meals': _meals, 'img': _imgs, 'feedback':_feedback
-                }
-            )
-            
-        resp = dumps(id)
-
-        return make_response(resp, 200)
-
-
-def formatRestaurantAddress(_json):
-    _loc = [_json['address']['lat'], _json['address']['lon']]
-    _address = {'manager_name': _json['address']['manager_name'], 'restaurant_phone': _json['address']['restaurant_phone'],
-    'manager_phone': _json['address']['manager_phone'], 'neighbourhood': _json['address']['neighbourhood'],
-    'town': _json['address']['town'], 'loc':_loc}
-
-    return _address
-
-
-
-
-def formatAvailability(_json):
-    _availability = {'mon': _json['availability']['mon'], 'tue': _json['availability']['tue'],
-    'wed': _json['availability']['wed'], 'thur': _json['availability']['thur'],
-    'fri': _json['availability']['fri'], 'sat': _json['availability']['sat'],
-    'sun': _json['availability']['sun']}
-
-    return _availability
-
-
-
-# def formatImgs(_restaurantEmail, _json):
-#     _imgs = []
-#     for i in _json['imgs']:
-#         _imgs.append("{}/{}".format(_restaurantEmail,_json['imgs'][i]))
-    
-#     return _imgs
-
+        restaurant = rFuncs.formatAddRestaurant(m,_json)
+        resp = rQueries.addRestaurant(m, restaurant)
+        return resp
 
 class Restaurant(Resource):
 
-    def get(self, id):
-        restaurant = m.find_one({'_id': ObjectId(id)})
+    def get(self, restaurant_id):
+        restaurant = m.find_one({'_id': ObjectId(restaurant_id)})
         func.abort_if_not_exist(restaurant)
         resp = dumps(restaurant)
         return resp
-
-    def post(self, id):
+        
+    def put(self, restaurant_id):
+        # add restaurant password update functions if password parameter is present
         _json = request.json
-        if 'drinks' in _json.keys():
-            operation = dbfunc.addDrink(_json)
-        elif 'meal' in _json.keys():
-            operation = dbfunc.addMeal(_json)
+        restaurant = rFuncs.formatUpdateRestaurant(_json)
+        operation = {'$set': restaurant}
+        resp = rQueries.updateRestaurant(m,restaurant_id,operation,[])
+        return resp
 
-        m.update_one(
-            {'_id': ObjectId(id)},
-            update = operation, 
-            upsert=False
-        )
-        return make_response("Added", 200)
-        
-    def put(self, id):
+class RestaurantItem(Resource):
+
+    def put(self, restaurant_id, item):
         _json = request.json
-        operation = {}
-        arrayFilters ={}
-        # This can update the other fields depending on the json parameter passed except tags, address, availability, menu, drinks, imgs, and feedback.
-        if 'address' in _json.keys():
-            _address = formatRestaurantAddress(_json)
-            _json['address'] = _address
 
-        if 'availability' in _json.keys():
-            _availability = formatAvailability(_json)
-            _json['availability'] = _availability
-        
-        
-        if 'meal' not in _json.keys() and 'drink'  not in _json.keys() and 'imgs' not in _json.keys():
-            operation = {'$set': _json}
-            arrayFilters = []
+        if item == "address":
+            _address = rFuncs.formatRestaurantAddress(_json)
+            operation = {'$set':{"address": _address}}
+            resp = rQueries.updateRestaurant(m, restaurant_id, operation, [])
+            return resp
+
+        elif item == "availability":
+            _availability = rFuncs.formatRestaurantAvailability(_json)
+            operation = {'$set': {"availability": _availability}}
+            resp = rQueries.updateRestaurant(m, restaurant_id, operation, [])
+            return resp
+
+        elif item =="drink":
+            # can only update drinks that exists already
+            operation = rFuncs.updateDrinks( _json)
+            resp = rQueries.updateRestaurant(m, restaurant_id, operation, [])
+            return resp
+
+        elif item =="images":
+            operation = rFuncs.updateImgs(restaurant_id, _json)
+            resp = rQueries.updateRestaurant(m, restaurant_id, operation, [])
+            return resp
+
         else:
-            if 'drink' in _json.keys():
-                operation, arrayFilters = dbfunc.updateDrinks(_json)
-            # elif 'imgs' in _json.keys():
-            #     _imgs = formatImgs(_json)
-            #     operation = {'$addToSet': {"imgs":{'$each':_imgs}}} #for image
-            elif 'meal' in _json.keys() and 'feedbacks' in _json.keys():
-                resp = dbfunc.updateMeal(m, id, _json)
-                # resp = dbfunc.updateMeal(m, id, _json)
-        
+            abort(404, message="This resource doesn't exist")
 
-        # Should be in try/catch doesn't return anything
-        #query.updateRestaurant(m, operation, arrayFilters)
+class RestaurantMealsItem(Resource):
+    def put(self, restaurant_id, item_index):
+            _json = request.json
+
+            for i in _json['meal'].keys():
+                updateOperation = "meals.{}.{}".format(item_index, i)
+                operation = {'$set': {updateOperation: _json['meal'][i]}}
+                resp = rQueries.updateRestaurant(m, restaurant_id, operation, [])
+            return resp
+        
+class RestaurantMealsItemItem(Resource):
+    def put(self, restaurant_id, item_index, item_item):
+        if item_item == "feedbacks":
+            _json = request.json
+            operation = rFuncs.updateFeedback(item_index, _json)
+            resp = rQueries.updateRestaurant(m, restaurant_id, operation, [])
+        
+        elif item_item == "images":
+            _json = request.json
+            operation = rFuncs.updateMealImg(item_index, _json)
+            resp = rQueries.updateRestaurant(m, restaurant_id, operation, [])
+        else:
+            abort(404, message="This resource doesn't exist")
 
         return resp
 
