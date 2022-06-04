@@ -8,6 +8,7 @@ from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
 from codes.functions import Functions
 import codes.dbfunc as dbfunc
+import codes.queries as query
 
 
 def Restaurant_setMongo(mongo):
@@ -71,13 +72,7 @@ def formatRestaurantAddress(_json):
 
     return _address
 
-def formatFeedback(_json):
-    _user = ObjectId(_json['feedback']['user'])
-    _rating = _json['feedback']['rating']
-    _comment = _json['feedback']['user']
-    _date = datetime.now()
-    _feedback = {'user':_user, 'rating':_rating, 'comment':_comment, 'date':_date}
-    return _feedback
+
 
 
 def formatAvailability(_json):
@@ -90,12 +85,6 @@ def formatAvailability(_json):
 
 
 
-def formatMeals(_json):
-    # price is divided into 3 portions
-    _meals = [{'name': _json['meals']['name'], 'description': _json['meals']['description'],
-    'status':_json['meals']['status'], 'portion':_json['meals']['portion']}]
-    return _meals
-
 def formatImgs(_json):
     _restaurantEmail = _json['email']
     _imgs = []
@@ -103,6 +92,7 @@ def formatImgs(_json):
         _imgs.append("{}/{}".format(_restaurantEmail,_json['imgs'][i]))
     
     return _imgs
+
 
 class Restaurant(Resource):
 
@@ -115,7 +105,9 @@ class Restaurant(Resource):
     def post(self, id):
         _json = request.json
         if 'drinks' in _json.keys():
-            operation = dbfunc.addDrinks(_json)
+            operation = dbfunc.addDrink(_json)
+        elif 'meal' in _json.keys():
+            operation = dbfunc.addMeal(_json)
 
         m.update_one(
             {'_id': ObjectId(id)},
@@ -124,7 +116,6 @@ class Restaurant(Resource):
         )
         return make_response("Added", 200)
         
-
     def put(self, id):
         _json = request.json
         operation = {}
@@ -139,29 +130,24 @@ class Restaurant(Resource):
             _json['availability'] = _availability
         
         
-        if 'meals' not in _json.keys() and 'drinks'  not in _json.keys() and 'imgs' not in _json.keys():
+        if 'meal' not in _json.keys() and 'drinks'  not in _json.keys() and 'imgs' not in _json.keys():
             operation = {'$set': _json}
-            arrayFilters = {}
+            arrayFilters = []
         else:
             if 'drinks' in _json.keys():
                 operation, arrayFilters = dbfunc.updateDrinks(_json)
             # elif 'imgs' in _json.keys():
             #     _imgs = formatImgs(_json)
             #     operation = {'$addToSet': {"imgs":{'$each':_imgs}}} #for image
-            # elif 'meals' in _json.keys():
-            #     _meals = formatMeals(_json) #this function will work milk
-            #     #_json['meals'] = _meals
-            #     operation = {'$addToSet': {"meals":{'$each':_meals}}} # for meal
+            elif 'meal' in _json.keys():
+                resp = dbfunc.updateMeal(m, id, _json)
+                # resp = dbfunc.updateMeal(m, id, _json)
         
 
         # Should be in try/catch doesn't return anything
-        m.update_one(
-            {'_id': ObjectId(id)},
-            update = operation, 
-            array_filters = arrayFilters,
-            upsert=False
-        )
-        return make_response("Updated", 200)
+        #query.updateRestaurant(m, operation, arrayFilters)
+
+        return resp
 
         #DELETE WILL BE DONE
 
