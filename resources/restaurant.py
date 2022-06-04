@@ -1,11 +1,8 @@
-from datetime import datetime
-from re import escape
-from flask import jsonify, make_response
+from flask import make_response
 from flask.globals import request
 from flask_restful import Resource, abort
 from bson.json_util import dumps
 from bson.objectid import ObjectId
-from werkzeug.security import generate_password_hash, check_password_hash
 from codes.functions import Functions
 from codes.dbfunc import RestaurantFunctions
 from codes.queries import RestaurantQueries
@@ -42,8 +39,10 @@ class Restaurant(Resource):
         return resp
         
     def put(self, restaurant_id):
-        # add restaurant password update functions if password parameter is present
+        # add restaurant password update functions(resource) if password parameter is present
         _json = request.json
+        restaurant = m.find_one({'_id': ObjectId(restaurant_id)})
+        func.abort_if_not_exist(restaurant)
         restaurant = rFuncs.formatUpdateRestaurant(_json)
         operation = {'$set': restaurant}
         resp = rQueries.updateRestaurant(m,restaurant_id,operation,[])
@@ -53,6 +52,8 @@ class RestaurantItem(Resource):
 
     def put(self, restaurant_id, item):
         _json = request.json
+        restaurant = m.find_one({'_id': ObjectId(restaurant_id)})
+        func.abort_if_not_exist(restaurant)
 
         if item == "address":
             _address = rFuncs.formatRestaurantAddress(_json)
@@ -72,17 +73,21 @@ class RestaurantItem(Resource):
             resp = rQueries.updateRestaurant(m, restaurant_id, operation, [])
             return resp
 
+        # elif item =="feedbacks":
+
         elif item =="images":
             operation = rFuncs.updateImgs(restaurant_id, _json)
             resp = rQueries.updateRestaurant(m, restaurant_id, operation, [])
             return resp
 
         else:
-            abort(404, message="This resource doesn't exist")
+            abort(404, message="This resource doesn't exist yet")
 
 class RestaurantMealsItem(Resource):
     def put(self, restaurant_id, item_index):
             _json = request.json
+            restaurant = m.find_one({'_id': ObjectId(restaurant_id)})
+            func.abort_if_not_exist(restaurant)
 
             for i in _json['meal'].keys():
                 updateOperation = "meals.{}.{}".format(item_index, i)
@@ -92,6 +97,9 @@ class RestaurantMealsItem(Resource):
         
 class RestaurantMealsItemItem(Resource):
     def put(self, restaurant_id, item_index, item_item):
+        restaurant = m.find_one({'_id': ObjectId(restaurant_id)})
+        func.abort_if_not_exist(restaurant)
+
         if item_item == "feedbacks":
             _json = request.json
             operation = rFuncs.updateFeedback(item_index, _json)

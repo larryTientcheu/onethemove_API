@@ -1,6 +1,5 @@
 from flask import jsonify, make_response
 from bson.objectid import ObjectId
-from bson.json_util import dumps
 
 class RestaurantQueries():
     def addRestaurant(self, m, restaurant):

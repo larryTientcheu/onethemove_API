@@ -1,10 +1,6 @@
-from email import message
-
-from sqlalchemy import null
-import codes.queries as query
 from bson.objectid import ObjectId
 from datetime import datetime
-from flask_restful import Resource, abort
+from flask_restful import abort
 from werkzeug.security import generate_password_hash, check_password_hash
 from codes.functions import Functions
 func = Functions()
