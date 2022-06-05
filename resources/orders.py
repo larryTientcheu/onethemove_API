@@ -5,8 +5,13 @@ from flask import make_response
 from flask.globals import request
 from datetime import datetime
 from codes.functions import Functions
+from codes.dbfunc import OrderFunctions
+from codes.queries import OrderQueries
 
 func = Functions()
+oFunc = OrderFunctions()
+oQueries = OrderQueries()
+
 def Order_setMongo(mongo):
     global m
     m = mongo
@@ -20,26 +25,13 @@ class Orders(Resource):
 
     def post(self):
         _json = request.json
-        # Add check if user exists and restaurant exists
-        _user = ObjectId(_json['user'])
-        _restaurant = ObjectId(_json['restaurant'])
-        _address = _json['address']
-        _item = {'restaurant': _restaurant,'menu':{'drink': _json['drink'], 'meal': _json['meal']}} 
-        # drinks and meal represent the index of the array containing them
-        _date_created = datetime.today()
-        #if date fulfilled key is not present then order has not yet been fulfilled. This is updated only when the status of delivered is set to true.
-        _status = 'preparing'
-
-        if _user and _address and _json['restaurant'] and _date_created:
-            id = m.insert(
-                {'user':_user, 'address':_address, 'item':_item, 'date_created':_date_created,
-                'status':_status})
-                
-            resp = dumps(id)
-            return make_response(resp, 200)
-        else:
+        order = oFunc.formatAddOrder(_json)
+        resp = oQueries.addOrder(order)
+        
+        if resp.status != 200:
             message = 'Error while adding an order'
             abort(400, message=message)
+        return resp
 
 def formatUpdateOrder(_json):
     _status = _json['status']
@@ -70,3 +62,7 @@ class Order(Resource):
         func.abort_if_not_exist(order)
         resp = dumps(order)
         return make_response(resp, 200)
+
+class OrderDetails(Resource):
+    def get(self,id):
+        pass

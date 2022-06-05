@@ -130,3 +130,40 @@ class  RestaurantFunctions():
         
         operation = {'$set':{"meals.{}.imgs".format(meal_index): _json['imgs']}}
         return operation
+
+class OrderFunctions():
+
+    def formatAddOrder(self, _json):
+        # Add check if user exists and restaurant exists
+
+        if 'user' not in _json.keys() or 'restaurant' not in _json.keys() or 'address' not in _json.keys() or 'meal' not in _json.keys():
+            abort(40, 'request not formatted correctly')
+
+        _user = ObjectId(_json['user'])
+        _restaurant = ObjectId(_json['restaurant'])
+        _address = _json['address']
+        
+        if 'drink' not in _json.keys():
+            _drink = None
+        else:
+            _drink = _json['drink'] 
+
+        _item = {'restaurant': _restaurant,'menu':{'drink': _drink, 'meal': _json['meal']}} 
+        # drinks and meal represent the index of the array containing them
+        _date_created = datetime.today()
+        #if date fulfilled key is not present then order has not yet been fulfilled. This is updated only when the status of delivered is set to true.
+        _status = 'preparing'
+
+        order = {'user':_user, 'address':_address, 'item':_item, 'date_created':_date_created,
+                'status':_status}
+                
+        return order
+
+
+    def formatUpdateOrder(self, _json):
+        _status = _json['status']
+        order = {'status': _status}
+        if _status == 'delivered':
+            _date_fulfilled = datetime.today()
+            order = {'status': _status, 'date_fulfilled': _date_fulfilled}
+        return order

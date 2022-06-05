@@ -16,3 +16,9 @@ class RestaurantQueries():
             )
 
         return make_response("Updated", 200)
+
+class OrderQueries():
+    def addOrder(self, m, order):
+        m.insert(order)
+        #resp = dumps(id)
+        return make_response("Order Added", 200)
