@@ -16,10 +16,10 @@ class Functions:
 
     def abort_if_exist(self, resource):
         if resource is not None:
-            abort(409, message="This resource already exists with that email ID...")
+            abort(409, message="This resource already exists...")
 
 
-    def abort_if_not_exist(self, resource):
+    def abort_if_not_exist(self, resource, r):
         if resource is None:
-            abort(404, message="This resource doesn't exists")
+            abort(404, message="This {} doesn't exist".format(r))
     

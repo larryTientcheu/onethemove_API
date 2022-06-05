@@ -13,9 +13,13 @@ oFunc = OrderFunctions()
 oQueries = OrderQueries()
 
 def Order_setMongo(mongo):
-    global m
+    global m,mU,mR
     m = mongo
+    mU = mongo
+    mR = mongo
     m = m.db.orders
+    mU = mU.db.users
+    mR = mR.db.restaurant
 
 class Orders(Resource):
     def get(self):
@@ -25,44 +29,37 @@ class Orders(Resource):
 
     def post(self):
         _json = request.json
-        order = oFunc.formatAddOrder(_json)
-        resp = oQueries.addOrder(order)
-        
-        if resp.status != 200:
-            message = 'Error while adding an order'
-            abort(400, message=message)
+        order = oFunc.formatAddOrder(mU, mR, _json)
+        resp = oQueries.addOrder(m, order)
         return resp
-
-def formatUpdateOrder(_json):
-    _status = _json['status']
-    order = {'status': _status}
-    if _status == 'delivered':
-        _date_fulfilled = datetime.today()
-        order = {'status': _status, 'date_fulfilled': _date_fulfilled}
-    return order
-
 class Order(Resource):
     def get (self, id):
         order = m.find_one({'_id': ObjectId(id)})
-        func.abort_if_not_exist(order)
+        func.abort_if_not_exist(order, "order")
         resp = dumps(order)
         return make_response(resp, 200)
 
     def put(self, id):
         _json = request.json
-        status = formatUpdateOrder(_json)
         order = m.find_one({'_id': ObjectId(id)})
+        func.abort_if_not_exist(order, "order")
         if 'date_fulfilled' in order.keys():
             abort(403, message= 'The order has already been fulfilled')
-        order = m.find_one_and_update(
-            {'_id': ObjectId(id)},
-            {'$set': status},
-            {'returnNewDocument': 'true'})
-        
-        func.abort_if_not_exist(order)
-        resp = dumps(order)
-        return make_response(resp, 200)
+ 
+        status = oFunc.formatUpdateOrder(_json)
+        resp = oQueries.updateOrder(m, id, status)
+        return resp
 
 class OrderDetails(Resource):
-    def get(self,id):
-        pass
+    def get(self, id, detail):
+        resp = m.aggregate([{'$match': {'_id': ObjectId(id)}},
+            {'$lookup':{
+                'from': "restaurant",
+                'localField': "restaurant",
+                'foreignField': "_id",
+                'as': "Details"
+            }
+            },{'$project':{"price":"$Details.meals.0.portions.{}"}}
+            
+        ])
+        return make_response(dumps(resp),200)

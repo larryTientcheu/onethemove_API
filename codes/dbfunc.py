@@ -133,37 +133,45 @@ class  RestaurantFunctions():
 
 class OrderFunctions():
 
-    def formatAddOrder(self, _json):
+    def formatAddOrder(self, mU, mR, _json):
         # Add check if user exists and restaurant exists
 
         if 'user' not in _json.keys() or 'restaurant' not in _json.keys() or 'address' not in _json.keys() or 'meal' not in _json.keys():
             abort(40, 'request not formatted correctly')
-
         _user = ObjectId(_json['user'])
+        func.abort_if_not_exist(mU.find_one({'_id': _user}), "user")
+
         _restaurant = ObjectId(_json['restaurant'])
+        func.abort_if_not_exist(mR.find_one({'_id': _restaurant}), "restaurant")
+
         _address = _json['address']
-        
+        _meal = _json['meal']
         if 'drink' not in _json.keys():
             _drink = None
         else:
             _drink = _json['drink'] 
 
-        _item = {'restaurant': _restaurant,'menu':{'drink': _drink, 'meal': _json['meal']}} 
         # drinks and meal represent the index of the array containing them
+        # Item here is used to format the order structure
+        # _item = {'restaurant': _restaurant,'menu':{'drink': _drink, 'meal': _json['meal']}} 
         _date_created = datetime.today()
-        #if date fulfilled key is not present then order has not yet been fulfilled. This is updated only when the status of delivered is set to true.
+        #if date fulfilled key is not present then order has not yet been fulfilled. This is updated only when the status is set to delivered.
         _status = 'preparing'
 
-        order = {'user':_user, 'address':_address, 'item':_item, 'date_created':_date_created,
-                'status':_status}
+        order = {'user':_user, 'address':_address,'restaurant':_restaurant, 'meal': _meal, 'drink': _drink,
+         'date_created':_date_created, 'status':_status}
                 
         return order
 
 
     def formatUpdateOrder(self, _json):
+        # Update order only modifies the status
+        if 'status' not in _json.keys():
+            abort(400, 'Status must be specified')
+        
         _status = _json['status']
         order = {'status': _status}
-        if _status == 'delivered':
+        if _status.lower() == 'delivered':
             _date_fulfilled = datetime.today()
             order = {'status': _status, 'date_fulfilled': _date_fulfilled}
         return order

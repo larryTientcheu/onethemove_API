@@ -42,7 +42,7 @@ class Restaurant(Resource):
         # add restaurant password update functions(resource) if password parameter is present
         _json = request.json
         restaurant = m.find_one({'_id': ObjectId(restaurant_id)})
-        func.abort_if_not_exist(restaurant)
+        func.abort_if_not_exist(restaurant, "restaurant")
         restaurant = rFuncs.formatUpdateRestaurant(_json)
         operation = {'$set': restaurant}
         resp = rQueries.updateRestaurant(m,restaurant_id,operation,[])
@@ -50,10 +50,24 @@ class Restaurant(Resource):
 
 class RestaurantItem(Resource):
 
+    def post(self, restaurant_id, item):
+        _json = request.json
+        resp = make_response("bad request", 400)
+
+        if item == "drinks":
+            operation = rFuncs.updateDrinks(_json)
+            resp = rQueries.updateRestaurant(m, restaurant_id, operation, [])
+        elif item == "meal":
+            operation = rFuncs.addMeal(_json)
+            resp = rQueries.updateRestaurant(m, restaurant_id, operation, [])
+
+        
+        return resp
+
     def put(self, restaurant_id, item):
         _json = request.json
         restaurant = m.find_one({'_id': ObjectId(restaurant_id)})
-        func.abort_if_not_exist(restaurant)
+        func.abort_if_not_exist(restaurant, "restaurant")
 
         if item == "address":
             _address = rFuncs.formatRestaurantAddress(_json)

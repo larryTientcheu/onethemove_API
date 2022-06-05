@@ -19,6 +19,14 @@ class RestaurantQueries():
 
 class OrderQueries():
     def addOrder(self, m, order):
-        m.insert(order)
-        #resp = dumps(id)
+        m.insert_one(order)
         return make_response("Order Added", 200)
+
+    def updateOrder(self, m, id, status):
+        m.update_one(
+            {'_id': ObjectId(id)},
+            {'$set': status},
+            upsert=False)
+        
+        return make_response("Status Updated", 200)
+        

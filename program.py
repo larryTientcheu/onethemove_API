@@ -31,7 +31,7 @@ api.add_resource(U_Address, "/user/address/<string:id>/<int:a>") # get and updat
 Restaurant_setMongo(m)
 api.add_resource(Restaurants, "/restaurant", methods=['GET', 'POST'])
 api.add_resource(Restaurant, "/restaurant/<string:restaurant_id>", methods=['GET', 'PUT'])
-api.add_resource(RestaurantItem, "/restaurant/<string:restaurant_id>/<string:item>", methods=['PUT'])
+api.add_resource(RestaurantItem, "/restaurant/<string:restaurant_id>/<string:item>", methods=['POST','PUT'])
 api.add_resource(RestaurantMealsItem, "/restaurant/<string:restaurant_id>/meals/<int:item_index>", methods=['PUT'])
 api.add_resource(RestaurantMealsItemItem, "/restaurant/<string:restaurant_id>/meals/<int:item_index>/<string:item_item>", methods=['PUT'])
 
@@ -40,6 +40,7 @@ api.add_resource(RestaurantMealsItemItem, "/restaurant/<string:restaurant_id>/me
 Order_setMongo(m)
 api.add_resource(Orders, "/order")
 api.add_resource(Order, "/order/<string:id>")
+api.add_resource(OrderDetails, "/order/<string:id>/<string:detail>")
 
 Login_setMongo(m)
 api.add_resource(Login, "/login")
