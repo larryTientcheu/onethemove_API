@@ -19,7 +19,7 @@ class  RestaurantFunctions():
         _tags = _json['tags']
         
         # All the feilds below this will be empty on creation. Will be updated on later
-
+        #_meal = [{}]
         if not _name or not _email or not _pwd:
             abort(400, message="The request is not formated correctly name email and restaurant")
         else:
@@ -38,7 +38,7 @@ class  RestaurantFunctions():
             _pwd = _json['password']
             _tags = _json['tags']
             
-            # All the feilds below this will be empty on creation. Will be updated on later
+            # All the fields not here Will be updated on later
 
             if not _name or not _email or not _pwd:
                 abort(400, message="The request is not formated correctly name email and restaurant")
@@ -96,11 +96,35 @@ class  RestaurantFunctions():
             return operation
         
 
-    def addMeal(self, _json):
-        _json['meal']['feedback'] = []
-        _json['meal']['img'] = []
-        operation = {'$addToSet': {'meals': {'$each': [_json['meal']]}}}
+    def addMeal(self, restaurant, _json):
+        # _json['meal']['feedback'] = []
+        # _json['meal']['img'] = []
+        # # operation = {'$addToSet': {'meals': {'$each': [_json['meal']]}}}
+        # operation ={'$set': {"meals.$[elem]":_json['meal']}}
+        # arrayFilters = [{"elem.name": {'$ne': _json['meal']['name']}}]
+        # return operation, arrayFilters
+        if 'meals' not in restaurant.keys():
+            restaurant['meals'] = []
+        for i in restaurant['meals']:
+            if i['name'] == _json['meal']['name']:
+                abort(404, message="A restaurant with this name already exists")
+        
+        operation = {'$push': {"meals": _json['meal']}}
+
         return operation
+
+
+
+    # def put(self, restaurant_id, item_index):
+    #     _json = request.json
+    #     restaurant = m.find_one({'_id': ObjectId(restaurant_id)})
+    #     func.abort_if_not_exist(restaurant, "restaurant")
+
+    #     for i in _json['meal'].keys():
+    #         updateOperation = "meals.{}.{}".format(item_index, i)
+    #         operation = {'$set': {updateOperation: _json['meal'][i]}}
+    #         resp = rQueries.updateRestaurant(m, restaurant_id, operation, [])
+    #     return resp
 
     def formatFeedback(self, _json):
 
@@ -175,3 +199,56 @@ class OrderFunctions():
             _date_fulfilled = datetime.today()
             order = {'status': _status, 'date_fulfilled': _date_fulfilled}
         return order
+
+    def getOrderDetails(self, m, id):
+        operation = m.aggregate([{'$match': {'_id': ObjectId(id)}},
+            {'$lookup':{
+                'from': "restaurant",
+                'localField': "restaurant",
+                'foreignField': "_id",
+                'as': "Restaurant"
+            }
+            },{'$project':{"Restaurant.meals.feedbacks":0, "Restaurant.imgs":0,
+            "Restaurant.availability":0, "Restaurant.feedback":0, "Restaurant.tags":0,
+            "Restaurant.password":0, "Restaurant.description":0, "Restaurant.address":0,   }}
+        ])
+        return list(operation)
+    
+    def getOrderedMeal(self, order_detailed, mIndex):
+        meal = order_detailed[0]["Restaurant"][0]['meals'][mIndex]
+        return meal
+    
+    def getOrderedDrink(self, order_detailed, dIndex):
+        drink = order_detailed[0]["Restaurant"][0]['drinks'][dIndex]
+        return drink
+
+    def computeOrderedMealPrice(self, mQuantity, ordered_meal, detail):
+        price = mQuantity*ordered_meal['portions'][detail]
+        return price
+
+    def computeOrderedDrinkPrice(self, dQuantity, ordered_drink):
+        price = dQuantity*ordered_drink['price']
+        return price
+
+    def formatProcessOrder(self, m, id, detail):
+        order_detailed = self.getOrderDetails(m, id)
+        mIndex = order_detailed[0]['meal']['index']
+        mQuantity = order_detailed[0]['meal']['quantity']
+        dIndex = order_detailed[0]['drink']['index']
+        dQuantity = order_detailed[0]['drink']['quantity']
+        ordered_meal = self.getOrderedMeal(order_detailed, mIndex)
+        ordered_drink =  self.getOrderedDrink(order_detailed, dIndex)
+        oMPrice = self.computeOrderedMealPrice(mQuantity, ordered_meal, detail)
+        oDPrice = self.computeOrderedDrinkPrice(dQuantity, ordered_drink)
+
+        order_detailed[0].pop('Restaurant')
+        ordered_meal.pop('portions')
+        order_detailed[0]['meal'] = ordered_meal
+        order_detailed[0]['meal_quantity'] = mQuantity
+        order_detailed[0]['drink'] = ordered_drink
+        order_detailed[0]['drink_quantity'] = dQuantity
+        order_detailed[0]['meal_portion'] = detail
+        order_detailed[0]['meal_price'] = oMPrice
+        order_detailed[0]['drink_price'] = oDPrice
+        
+        return order_detailed

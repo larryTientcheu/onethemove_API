@@ -12,7 +12,7 @@ class RestaurantQueries():
                 {'_id': ObjectId(id)},
                 update = operation, 
                 array_filters = arrayFilters,
-                upsert=False
+                upsert=True
             )
 
         return make_response("Updated", 200)

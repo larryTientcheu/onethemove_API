@@ -52,14 +52,19 @@ class RestaurantItem(Resource):
 
     def post(self, restaurant_id, item):
         _json = request.json
+        restaurant = m.find_one({'_id': ObjectId(restaurant_id)}) #limit the return keys
+        func.abort_if_not_exist(restaurant, "restaurant")
         resp = make_response("bad request", 400)
+        arrayFilters = []
+        operation = {}
 
         if item == "drinks":
             operation = rFuncs.updateDrinks(_json)
             resp = rQueries.updateRestaurant(m, restaurant_id, operation, [])
         elif item == "meal":
-            operation = rFuncs.addMeal(_json)
-            resp = rQueries.updateRestaurant(m, restaurant_id, operation, [])
+            # operation, arrayFilters = rFuncs.addMeal(_json)
+            operation = rFuncs.addMeal(restaurant, _json)
+            resp = rQueries.updateRestaurant(m, restaurant_id, operation, arrayFilters)
 
         
         return resp
@@ -101,7 +106,7 @@ class RestaurantMealsItem(Resource):
     def put(self, restaurant_id, item_index):
             _json = request.json
             restaurant = m.find_one({'_id': ObjectId(restaurant_id)})
-            func.abort_if_not_exist(restaurant)
+            func.abort_if_not_exist(restaurant, "restaurant")
 
             for i in _json['meal'].keys():
                 updateOperation = "meals.{}.{}".format(item_index, i)
@@ -112,7 +117,7 @@ class RestaurantMealsItem(Resource):
 class RestaurantMealsItemItem(Resource):
     def put(self, restaurant_id, item_index, item_item):
         restaurant = m.find_one({'_id': ObjectId(restaurant_id)})
-        func.abort_if_not_exist(restaurant)
+        func.abort_if_not_exist(restaurant, "restaurant")
 
         if item_item == "feedbacks":
             _json = request.json

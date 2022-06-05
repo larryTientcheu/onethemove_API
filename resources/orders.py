@@ -52,14 +52,5 @@ class Order(Resource):
 
 class OrderDetails(Resource):
     def get(self, id, detail):
-        resp = m.aggregate([{'$match': {'_id': ObjectId(id)}},
-            {'$lookup':{
-                'from': "restaurant",
-                'localField': "restaurant",
-                'foreignField': "_id",
-                'as': "Details"
-            }
-            },{'$project':{"price":"$Details.meals.0.portions.{}"}}
-            
-        ])
-        return make_response(dumps(resp),200)
+        order = oFunc.formatProcessOrder(m, id, detail)
+        return make_response(dumps(order),200)
