@@ -24,6 +24,7 @@ m = PyMongo(app)
 User_setMongo(m)
 api.add_resource(Users,"/user", methods=['GET']) # get user. This query should be restricted only to The owner
 api.add_resource(User, "/user/<string:id>") # get a specific user and update
+api.add_resource(UserCredentials, "/user/<string:id>/<string:credential>")
 api.add_resource(U_Address, "/user/address/<string:id>/<int:a>") # get and update adrress, last argument specifies which address
 
 

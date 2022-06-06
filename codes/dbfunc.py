@@ -1,3 +1,4 @@
+from email import message
 from bson.objectid import ObjectId
 from datetime import datetime
 from flask_restful import abort
@@ -37,6 +38,34 @@ class AuthFunctions():
     def registerRestaurant():
         pass
 
+    def formatUpdateUserPassword(self, m, id, _json):
+        user = m.find_one({'_id': ObjectId(id)})
+        func.abort_if_not_exist(user, "user")
+        if 'old_password' not in _json.keys() and 'new_password' not in _json.keys():
+            abort(400, message="Not all the parameters were passed")
+    
+        hashed_old_password = user['password']
+        unhashed_old_password =  _json['old_password']
+        newPassword = _json['new_password']
+        if func.checkPassword(hashed_old_password, unhashed_old_password):
+            newPassword = func.hashPassword(newPassword)
+            return newPassword
+        else:
+            abort(400, "Old password doesn't match")
+
+    def formatUpdateUserEmail(self, m, id, _json):
+        user = m.find_one({'_id': ObjectId(id)})
+        func.abort_if_not_exist(user, "user")
+        if 'old_email' not in _json.keys() and 'new_email' not in _json.keys():
+            abort(400, message="Not all the parameters were passed")
+    
+        email = user['email']
+        old_email =  _json['old_email']
+        new_email = _json['new_email']
+        if email.lower() == old_email.lower(): 
+            return new_email
+        else:
+            abort(400, message="Old password doesn't match")
 
 class UserFunctions():
     def formatUpdateUser(self, _json):

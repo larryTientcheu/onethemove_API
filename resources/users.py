@@ -1,15 +1,11 @@
-from re import escape
-import sys
-import json
-from bson import json_util
 from flask import make_response
 from flask.globals import request
 from flask_restful import Resource, abort
-from bson.json_util import default, dumps
+from bson.json_util import dumps
 from bson.objectid import ObjectId
-from werkzeug.security import generate_password_hash, check_password_hash
+from numpy import ufunc
 from codes.functions import Functions
-from codes.dbfunc import UserFunctions
+from codes.dbfunc import AuthFunctions, UserFunctions
 from codes.queries import UserQueries
 
 
@@ -17,6 +13,7 @@ from codes.queries import UserQueries
 func = Functions()
 uFunc = UserFunctions()
 uQueries = UserQueries()
+authFunc = AuthFunctions()
 
 def User_setMongo(mongo):
     global m
@@ -39,7 +36,7 @@ class User(Resource):
 
     def get(self, id):
 
-        user = m.find_one({'_id': ObjectId(id)})
+        user = m.find_one({'_id': ObjectId(id)},{'password':0})
         func.abort_if_not_exist(user, "user")
         resp = make_response(dumps(user), 200)
         resp.mimetype = 'application/json'
@@ -53,12 +50,33 @@ class User(Resource):
         func.abort_if_not_exist(user, "user")
         # This will update the other fields depending on the json parameter passed except address and cart
         # Update user password as a seperate resource
-        
         user = uFunc.formatUpdateUser(_json)
         resp = uQueries.updateUser(m, id, user)
 
         return resp
         # DELETE Will be done
+
+# Resource to update email and password.
+# To update password email must be entered and 2 password fields
+# To update email, password must be entered. Not this might break sign in
+
+class UserCredentials(Resource):
+    def put(self, id, credential):
+        _json = request.json
+        if credential == 'password':
+            newPassword = authFunc.formatUpdateUserPassword(m, id, _json)
+            newPassword = {"password": newPassword}
+            resp = uQueries.updateUser(m, id, newPassword)
+
+        if credential == 'email':
+            new_email = authFunc.formatUpdateUserEmail(m, id, _json)
+            new_email = {"email": new_email}
+            resp = uQueries.updateUser(m, id, new_email)
+
+        return resp
+            
+
+
 
 
 

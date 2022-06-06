@@ -9,7 +9,7 @@ class Functions:
         hashed = generate_password_hash(password)
         return hashed
 
-    
+    # takes db hashed password, actual form passord
     def checkPassword(self, hashed, password):
         result = check_password_hash(hashed, password)
         return result
