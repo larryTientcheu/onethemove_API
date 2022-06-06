@@ -1,6 +1,22 @@
 from flask import jsonify, make_response
 from bson.objectid import ObjectId
 
+
+class AuthQueries():
+    def registerUser(self, m, user):
+        m.insert_one(user)
+        return make_response("Registered", 201)
+
+
+class UserQueries():
+    def updateUser(self, m, id, user):
+        m.update_one(
+            {'_id': ObjectId(id)},
+            {'$set': user}, upsert= False
+        )
+        return make_response("Updated", 200)
+
+
 class RestaurantQueries():
     def addRestaurant(self, m, restaurant):
         m.insert_one(restaurant)

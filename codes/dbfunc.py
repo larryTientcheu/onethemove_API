@@ -1,9 +1,60 @@
 from bson.objectid import ObjectId
 from datetime import datetime
 from flask_restful import abort
+from sqlalchemy import JSON
 from werkzeug.security import generate_password_hash, check_password_hash
 from codes.functions import Functions
 func = Functions()
+
+
+class AuthFunctions():
+    def formatRegisterUser(self, m, _json):
+
+        _fname = _json['first_name']
+        _lname = None if 'last_name' not in _json.keys() else _json['last_name']
+        _email = _json['email']
+        #_birthday = _json['birthday']
+        _pwd = _json['password']
+        _address1 = {} #Empty address on creation of user now. should fix to create with user with if empty leave but enforce later
+        _address2 = {}
+        _cart = []
+
+        user = m.find_one({'email': _email})
+        func.abort_if_exist(user)
+
+        if (_fname or _lname) and _email and _pwd:
+            _hashed_pwd = func.hashPassword(_pwd)
+            user = {'address1': _address1,'address2': _address2, 'first_name': _fname,
+            'last_name': _lname, 'email': _email, 'password': _hashed_pwd, 'cart': _cart}
+
+            return user
+        else:
+            message = 'Error while adding a user'
+            abort(400, message=message)
+
+
+
+    def registerRestaurant():
+        pass
+
+
+class UserFunctions():
+    def formatUpdateUser(self, _json):
+    
+        if 'first_name' not in _json.keys():
+            abort(400, message="First name must be included")
+        if "password" in _json.keys():
+            _json.pop('password')
+        if "email" in _json.keys():
+            _json.pop('email')
+        _fname = _json['first_name']
+        _lname = None if 'last_name' not in _json.keys() else _json['last_name']
+        user = {'first_name': _fname, 'last_name': _lname}
+        return user
+        
+
+
+
 
 
 class  RestaurantFunctions():
