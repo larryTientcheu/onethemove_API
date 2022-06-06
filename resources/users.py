@@ -42,6 +42,7 @@ class Users(Resource):
         _address1 = {} #Empty address on creation of user now. should fix to create with user with if empty leave but enforce later
         _address2 = {}
         _cart = []
+        "sdsdsd"
 
         user = m.find_one({'email': _email})
         func.abort_if_exist(user)
