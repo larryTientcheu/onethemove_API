@@ -24,10 +24,13 @@ class Users(Resource):
     def get(self):  # find all users
         users = m.find()
         resp = dumps(users)
-        return make_response(resp, 200)
+        resp = make_response(resp, 200)
+        resp.mimetype = 'application/json'
+        return resp
 
 
     # Seperate create user and adress(Personal resource and also for cart)
+    # This should be added as a resource Register
     def post(self):  # add
 
         _json = request.json
@@ -41,9 +44,6 @@ class Users(Resource):
         _cart = []
 
         user = m.find_one({'email': _email})
-        # #Checks the string dumps
-
-        # Check the one file returned from databas
         func.abort_if_exist(user)
 
         if (_fname or _lname) and _email and _pwd:
@@ -51,8 +51,9 @@ class Users(Resource):
             id = m.insert(
                 {'address1': _address1,'address2': _address2, 'first_name': _fname, 'last_name': _lname, 'email': _email, 'password': _hashed_pwd, 'cart': _cart})
             # the above line inserts the elements in the database if the user doesn't exist
-            resp = dumps(id)
-            return make_response(resp, 201)
+            resp = make_response(dumps(id), 201)
+            resp.mimetype = 'application/json'
+            return resp
         else:
             message = 'Error while adding a user'
             abort(400, message=message)
@@ -61,17 +62,20 @@ class Users(Resource):
 class User(Resource):
 
     def get(self, id):
+
         user = m.find_one({'_id': ObjectId(id)})
-        func.abort_if_not_exist(user)
-        resp = dumps(user)
-        return make_response(resp, 200)
+        func.abort_if_not_exist(user, "user")
+        resp = make_response(dumps(user), 200)
+        resp.mimetype = 'application/json'
+        return resp
+  
 
 
     def put(self, id):
 
         _json = request.json
         # This can update the other fields depending on the json parameter passed except address and cart
-
+        # Update user password as a seperate resource
         user = m.find_one_and_update(
             {'_id': ObjectId(id)},
             {'$set': _json},

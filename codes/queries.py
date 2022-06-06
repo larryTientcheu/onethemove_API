@@ -4,7 +4,7 @@ from bson.objectid import ObjectId
 class RestaurantQueries():
     def addRestaurant(self, m, restaurant):
         m.insert_one(restaurant)
-        return make_response("Added", 200)
+        return make_response("Created", 201)
 
 
     def updateRestaurant(self, m, id, operation, arrayFilters):
@@ -20,7 +20,7 @@ class RestaurantQueries():
 class OrderQueries():
     def addOrder(self, m, order):
         m.insert_one(order)
-        return make_response("Order Added", 200)
+        return make_response("Created", 200)
 
     def updateOrder(self, m, id, status):
         m.update_one(

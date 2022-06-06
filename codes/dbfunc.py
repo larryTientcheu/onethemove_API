@@ -19,7 +19,7 @@ class  RestaurantFunctions():
         _tags = _json['tags']
         
         # All the feilds below this will be empty on creation. Will be updated on later
-        #_meal = [{}]
+
         if not _name or not _email or not _pwd:
             abort(400, message="The request is not formated correctly name email and restaurant")
         else:
@@ -97,12 +97,6 @@ class  RestaurantFunctions():
         
 
     def addMeal(self, restaurant, _json):
-        # _json['meal']['feedback'] = []
-        # _json['meal']['img'] = []
-        # # operation = {'$addToSet': {'meals': {'$each': [_json['meal']]}}}
-        # operation ={'$set': {"meals.$[elem]":_json['meal']}}
-        # arrayFilters = [{"elem.name": {'$ne': _json['meal']['name']}}]
-        # return operation, arrayFilters
         if 'meals' not in restaurant.keys():
             restaurant['meals'] = []
         for i in restaurant['meals']:
@@ -112,19 +106,6 @@ class  RestaurantFunctions():
         operation = {'$push': {"meals": _json['meal']}}
 
         return operation
-
-
-
-    # def put(self, restaurant_id, item_index):
-    #     _json = request.json
-    #     restaurant = m.find_one({'_id': ObjectId(restaurant_id)})
-    #     func.abort_if_not_exist(restaurant, "restaurant")
-
-    #     for i in _json['meal'].keys():
-    #         updateOperation = "meals.{}.{}".format(item_index, i)
-    #         operation = {'$set': {updateOperation: _json['meal'][i]}}
-    #         resp = rQueries.updateRestaurant(m, restaurant_id, operation, [])
-    #     return resp
 
     def formatFeedback(self, _json):
 

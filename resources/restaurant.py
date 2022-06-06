@@ -21,8 +21,9 @@ rQueries = RestaurantQueries()
 class Restaurants(Resource):
     def get(self): # find all restaurants
         restaurant = m.find()
-        resp = dumps(restaurant)
-        return make_response(resp, 200)
+        resp = make_response(dumps(restaurant), 200)
+        resp.mimetype = 'application/json'
+        return resp
 
     def post(self):
         _json = request.json
@@ -34,8 +35,9 @@ class Restaurant(Resource):
 
     def get(self, restaurant_id):
         restaurant = m.find_one({'_id': ObjectId(restaurant_id)})
-        func.abort_if_not_exist(restaurant)
-        resp = dumps(restaurant)
+        func.abort_if_not_exist(restaurant, "restaurant")
+        resp = make_response(dumps(restaurant), 200)
+        resp.mimetype = 'application/json'
         return resp
         
     def put(self, restaurant_id):
