@@ -247,23 +247,33 @@ class OrderFunctions():
 
     def formatProcessOrder(self, m, id, detail):
         order_detailed = self.getOrderDetails(m, id)
-        mIndex = order_detailed[0]['meal']['index']
-        mQuantity = order_detailed[0]['meal']['quantity']
-        dIndex = order_detailed[0]['drink']['index']
-        dQuantity = order_detailed[0]['drink']['quantity']
-        ordered_meal = self.getOrderedMeal(order_detailed, mIndex)
-        ordered_drink =  self.getOrderedDrink(order_detailed, dIndex)
-        oMPrice = self.computeOrderedMealPrice(mQuantity, ordered_meal, detail)
-        oDPrice = self.computeOrderedDrinkPrice(dQuantity, ordered_drink)
 
+        if order_detailed[0]['meal'] is not None:
+            mIndex = order_detailed[0]['meal']['index']
+            mQuantity = order_detailed[0]['meal']['quantity']
+            ordered_meal = self.getOrderedMeal(order_detailed, mIndex)
+            #ordered_meal.pop('portions')
+            order_detailed[0]['meal'] = ordered_meal
+            order_detailed[0]['meal_quantity'] = mQuantity
+
+            print(detail.lower())
+            if detail.lower() != "small" and detail.lower() != "medium" and detail.lower() != "large":
+                abort(400, message="portion must be either small, medium or large")
+            
+            order_detailed[0]['meal_portion'] = detail
+            oMPrice = ordered_meal['portions'][detail]
+            order_detailed[0]['meal_price'] = oMPrice
+        
+        if order_detailed[0]['drink'] is not None:
+
+            dIndex = order_detailed[0]['drink']['index']
+            dQuantity = order_detailed[0]['drink']['quantity']
+            ordered_drink =  self.getOrderedDrink(order_detailed, dIndex)
+            oDPrice = ordered_drink['price']
+            order_detailed[0]['drink'] = ordered_drink
+            order_detailed[0]['drink_quantity'] = dQuantity
+            order_detailed[0]['drink_price'] = oDPrice
+        
         order_detailed[0].pop('Restaurant')
-        ordered_meal.pop('portions')
-        order_detailed[0]['meal'] = ordered_meal
-        order_detailed[0]['meal_quantity'] = mQuantity
-        order_detailed[0]['drink'] = ordered_drink
-        order_detailed[0]['drink_quantity'] = dQuantity
-        order_detailed[0]['meal_portion'] = detail
-        order_detailed[0]['meal_price'] = oMPrice
-        order_detailed[0]['drink_price'] = oDPrice
         
         return order_detailed

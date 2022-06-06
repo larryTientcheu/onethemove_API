@@ -51,6 +51,9 @@ class Order(Resource):
         return resp
 
 class OrderDetails(Resource):
-    def get(self, id, detail):
-        order = oFunc.formatProcessOrder(m, id, detail)
+    def get(self, id):
+        _json = request.json
+        if 'meal_portion' not in _json.keys():
+            abort(400, message="A portion must be selected for the meal")
+        order = oFunc.formatProcessOrder(m, id, _json['meal_portion'])
         return make_response(dumps(order),200)

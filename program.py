@@ -40,7 +40,7 @@ api.add_resource(RestaurantMealsItemItem, "/restaurant/<string:restaurant_id>/me
 Order_setMongo(m)
 api.add_resource(Orders, "/order")
 api.add_resource(Order, "/order/<string:id>")
-api.add_resource(OrderDetails, "/order/<string:id>/<string:detail>")
+api.add_resource(OrderDetails, "/order/<string:id>/detail")
 
 Login_setMongo(m)
 api.add_resource(Login, "/login")
