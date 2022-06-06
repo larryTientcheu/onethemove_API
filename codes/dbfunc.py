@@ -225,7 +225,7 @@ class OrderFunctions():
             }
             },{'$project':{"Restaurant.meals.feedbacks":0, "Restaurant.imgs":0,
             "Restaurant.availability":0, "Restaurant.feedback":0, "Restaurant.tags":0,
-            "Restaurant.password":0, "Restaurant.description":0, "Restaurant.address":0,   }}
+            "Restaurant.password":0, "Restaurant.description":0, "Restaurant.address":0}}
         ])
         return list(operation)
     
@@ -245,14 +245,14 @@ class OrderFunctions():
         price = dQuantity*ordered_drink['price']
         return price
 
-    def formatProcessOrder(self, m, id, detail):
+    def formatDetailedOrder(self, m, id, detail):
         order_detailed = self.getOrderDetails(m, id)
 
         if order_detailed[0]['meal'] is not None:
             mIndex = order_detailed[0]['meal']['index']
             mQuantity = order_detailed[0]['meal']['quantity']
             ordered_meal = self.getOrderedMeal(order_detailed, mIndex)
-            #ordered_meal.pop('portions')
+            order_detailed[0]['restaurant_name'] = order_detailed[0]["Restaurant"][0]['name']
             order_detailed[0]['meal'] = ordered_meal
             order_detailed[0]['meal_quantity'] = mQuantity
 

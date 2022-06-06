@@ -55,5 +55,5 @@ class OrderDetails(Resource):
         _json = request.json
         if 'meal_portion' not in _json.keys():
             abort(400, message="A portion must be selected for the meal")
-        order = oFunc.formatProcessOrder(m, id, _json['meal_portion'])
+        order = oFunc.formatDetailedOrder(m, id, _json['meal_portion'])
         return make_response(dumps(order),200)
