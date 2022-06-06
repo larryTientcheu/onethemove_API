@@ -25,7 +25,7 @@ class OrderQueries():
     def updateOrder(self, m, id, status):
         m.update_one(
             {'_id': ObjectId(id)},
-            {'$set': status},
+            {'$set': status, "$currentDate": {"lastModified": True}},
             upsert=False)
         
         return make_response("Status Updated", 200)

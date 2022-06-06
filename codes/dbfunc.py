@@ -156,12 +156,30 @@ class  RestaurantFunctions():
         return operation
 
 class OrderFunctions():
+    def formatMealDrinkInOrder(self, _json):
+        _meal = None
+        _drink = None
+        if 'meal' not in _json.keys() and 'drink' not in _json.keys():
+            abort(400,  message='The order request is badly formatted. A meal or Drink must be included')
+        else:
+            if 'meal' in _json.keys():
+                if _json['meal'] is not None:
+                    if 'portion' not in _json['meal'].keys():
+                        abort(400,  message='A portion must be included when selecting a meal')
+                    _meal = _json['meal']
+            if 'drink' in _json.keys():
+                if _json['drink'] is not None:
+                    _drink = _json['drink']  
+            
+            if _meal is None and _drink is None:
+                abort(400, message="Either a meal or drink must be selected")
+        return _meal, _drink
 
     def formatAddOrder(self, mU, mR, _json):
         # Add check if user exists and restaurant exists
 
-        if 'user' not in _json.keys() or 'restaurant' not in _json.keys() or 'address' not in _json.keys() or 'meal' not in _json.keys():
-            abort(40, 'request not formatted correctly')
+        if 'user' not in _json.keys() or 'restaurant' not in _json.keys() or 'address' not in _json.keys():
+            abort(400,  message='request not formatted correctly')
         _user = ObjectId(_json['user'])
         func.abort_if_not_exist(mU.find_one({'_id': _user}), "user")
 
@@ -169,18 +187,11 @@ class OrderFunctions():
         func.abort_if_not_exist(mR.find_one({'_id': _restaurant}), "restaurant")
 
         _address = _json['address']
-        _meal = _json['meal']
-        if 'drink' not in _json.keys():
-            _drink = None
-        else:
-            _drink = _json['drink'] 
-
-        # drinks and meal represent the index of the array containing them
-        # Item here is used to format the order structure
-        # _item = {'restaurant': _restaurant,'menu':{'drink': _drink, 'meal': _json['meal']}} 
-        _date_created = datetime.today()
+        _meal, _drink = self.formatMealDrinkInOrder(_json)
+       
+        _date_created = datetime.today().astimezone()
         #if date fulfilled key is not present then order has not yet been fulfilled. This is updated only when the status is set to delivered.
-        _status = 'preparing'
+        _status = 'in_cart'
 
         order = {'user':_user, 'address':_address,'restaurant':_restaurant, 'meal': _meal, 'drink': _drink,
          'date_created':_date_created, 'status':_status}
@@ -191,12 +202,16 @@ class OrderFunctions():
     def formatUpdateOrder(self, _json):
         # Update order only modifies the status
         if 'status' not in _json.keys():
-            abort(400, 'Status must be specified')
-        
+            abort(400,  message='Status must be specified')
         _status = _json['status']
-        order = {'status': _status}
+
+        if _status == 'in_cart':
+            _meal, _drink = self.formatMealDrinkInOrder(_json)
+            order = {'meal': _meal, 'drink': _drink, 'status': _status}
+        else:
+            order = {'status': _status}
         if _status.lower() == 'delivered':
-            _date_fulfilled = datetime.today()
+            _date_fulfilled = datetime.today().astimezone()
             order = {'status': _status, 'date_fulfilled': _date_fulfilled}
         return order
 
