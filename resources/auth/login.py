@@ -29,8 +29,9 @@ class Login(Resource):
         else:
             if func.checkPassword(users['password'], _password):
                 users.pop('password')
-                resp = dumps(users)
-                return make_response(resp, 200)
+                resp = make_response(dumps(users), 200)
+                resp.mimetype = 'application/json'
+                return resp
             else: 
                 abort(409, message="Incorrect Email or Password")
             

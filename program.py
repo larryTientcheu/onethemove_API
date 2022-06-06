@@ -5,12 +5,10 @@ from flask_restful import Api, Resource,reqparse,abort
 from bson.json_util import dumps
 from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
-from resources.login import Login_setMongo
-
 from resources.users import *
 from resources.restaurant import *
 from resources.orders import *
-from resources.login import *
+from resources.auth.login import *
 
 
 
@@ -44,6 +42,7 @@ api.add_resource(OrderDetails, "/order/<string:id>/detail")
 
 Login_setMongo(m)
 api.add_resource(Login, "/login")
+#api.add_resource(Register, "/register")
 
 if __name__ == '__main__':
     app.run(debug=True)
