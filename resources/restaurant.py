@@ -169,7 +169,7 @@ class RestaurantMealsItemItem(Resource):
         
         elif item_item == "images":
             _json = request.json
-            operation = rFuncs.updateMealImg(item_index, _json)
+            operation = rFuncs.updateMealImg(restaurant_id, item_index, _json)
             resp = rQueries.updateRestaurant(m, restaurant_id, operation, [])
         else:
             abort(404, message="This resource doesn't exist")

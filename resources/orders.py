@@ -66,6 +66,8 @@ class OrderEntityDetails(Resource):
     def get(self, entity, id):
         if entity == "user":
             order_detailed = oFunc.getOrderEntityDetails(m, entity, id)
+            if len(order_detailed) < 1:
+                abort(400, message="This user has no orders")  
             user_orders = []
             for order in order_detailed:
                 user_orders.append(oFunc.formatDetailedOrder(order))
@@ -73,6 +75,8 @@ class OrderEntityDetails(Resource):
         
         elif entity == 'restaurant':
             order_detailed = oFunc.getOrderEntityDetails(m, entity, id)
+            if len(order_detailed) < 1:
+                abort(400, message="This restaurant has no orders")
             restaurant_orders = []
             for order in order_detailed:
                 restaurant_orders.append(oFunc.formatDetailedOrder(order))

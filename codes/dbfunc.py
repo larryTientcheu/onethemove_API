@@ -243,11 +243,20 @@ class  RestaurantFunctions():
         operation = {'$addToSet': {"meals.{}.feedbacks".format(meal_index):{'$each': _feedback}}}
         return operation
 
-    def updateMealImg(self, meal_index, _json):
+    def formatMealImgs(self, id, meal_index, images):
+        _imgs = []
+        print()
+        for i in images:
+            _imgs.append("{}/{}/{}".format(id, meal_index, i))
+        
+        return _imgs
+
+
+    def updateMealImg(self, id, meal_index, _json):
         if "imgs" not in _json.keys():
             abort(400, message="The request feedback is not formated correctly")
-        
-        operation = {'$set':{"meals.{}.imgs".format(meal_index): _json['imgs']}}
+        imgs = self.formatMealImgs(id, meal_index, _json['imgs'])
+        operation = {'$set':{"meals.{}.imgs".format(meal_index): imgs}}
         return operation
 
 class OrderFunctions():
