@@ -53,11 +53,17 @@ class Order(Resource):
         return resp
 
 class OrderDetails(Resource):
-    def get(self, id, detail):
-        _json = request.json
-        if not detail:
-            abort(400, message="A portion must be selected for the meal")
-        order = oFunc.formatDetailedOrder(m, id, detail)
+    def get(self, id):
+        order = oFunc.formatDetailedOrder(m, id)
         resp = make_response(dumps(order), 200)
         resp.mimetype = 'application/json'
         return resp
+
+class OrderEntityDetails(Resource):
+    def get(self, entity, id):
+        if entity == "user":
+            order_detailed = oFunc.getOrderEntityDetails(m, entity, id)
+            resp = make_response(dumps(order_detailed), 200)
+        resp.mimetype = 'application/json'
+        return resp
+

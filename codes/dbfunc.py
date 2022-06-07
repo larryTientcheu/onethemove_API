@@ -215,6 +215,8 @@ class  RestaurantFunctions():
         feedback = []
         # add Checks for rating
         for i in _json:
+            # Before adding feedback check if user exists and has placed an order from this restaurant
+            # For meal feedback add check that the user has an order with this meal
             _user = ObjectId(i['user'])
             _rating = i['rating']
             _comment = i['comment']
@@ -338,22 +340,23 @@ class OrderFunctions():
         price = dQuantity*ordered_drink['price']
         return price
 
-    def formatDetailedOrder(self, m, id, detail):
+    def formatDetailedOrder(self, m, id):
         order_detailed = self.getOrderDetails(m, id)
 
         if order_detailed[0]['meal'] is not None:
             mIndex = order_detailed[0]['meal']['index']
             mQuantity = order_detailed[0]['meal']['quantity']
+            mPortion = order_detailed[0]['meal']['portion']
             ordered_meal = self.getOrderedMeal(order_detailed, mIndex)
             order_detailed[0]['restaurant_name'] = order_detailed[0]["Restaurant"][0]['name']
             order_detailed[0]['meal'] = ordered_meal
             order_detailed[0]['meal_quantity'] = mQuantity
 
-            if detail.lower() != "small" and detail.lower() != "medium" and detail.lower() != "large":
+            if mPortion.lower() != "small" and mPortion.lower() != "medium" and mPortion.lower() != "large":
                 abort(400, message="portion must be either small, medium or large")
             
-            order_detailed[0]['meal_portion'] = detail
-            oMPrice = ordered_meal['portions'][detail]
+            order_detailed[0]['meal_portion'] = mPortion
+            oMPrice = ordered_meal['portions'][mPortion]
             order_detailed[0]['meal_price'] = oMPrice
         
         if order_detailed[0]['drink'] is not None:
@@ -367,5 +370,20 @@ class OrderFunctions():
             order_detailed[0]['drink_price'] = oDPrice
         
         order_detailed[0].pop('Restaurant')
+        order_detailed[0]['meal'].pop('portions')
         
         return order_detailed
+
+    def getOrderEntityDetails(self, m, entity, id):
+        operation = m.aggregate([{'$match': {entity: ObjectId(id)}},
+            {'$lookup':{
+                'from': "restaurant",
+                'localField': "restaurant",
+                'foreignField': "_id",
+                'as': "Restaurant"
+            }
+            },{'$project':{"Restaurant.meals.feedbacks":0, "Restaurant.imgs":0,
+            "Restaurant.availability":0, "Restaurant.feedback":0, "Restaurant.tags":0,
+            "Restaurant.password":0, "Restaurant.description":0, "Restaurant.address":0}}
+        ])
+        return list(operation)
