@@ -62,9 +62,9 @@ class RestaurantCredentials(Resource):
             return resp
             
         elif credential == "email":
-            if 'email' not in _json.keys():
+            if 'new_email' not in _json.keys():
                 abort(400, message= "you must include a new restaurant email to update email")
-            _email = _json['email']
+            _email = _json['new_email']
             restaurants = m.find_one({'email':_email})
             func.abort_if_exist(restaurants)
             _email = {"email": _email}
@@ -128,14 +128,17 @@ class RestaurantItem(Resource):
 
         elif item =="drink":
             # can only update drinks that exists already
-            operation = rFuncs.updateDrinks( _json)
+            operation = rFuncs.updateDrinks(_json)
             resp = rQueries.updateRestaurant(m, restaurant_id, operation, [])
             return resp
 
-        # elif item =="feedbacks": for restaurant feedback
+        elif item =="feedbacks":
+            operation = rFuncs.updateRestaurantFeedback(_json)
+            resp = rQueries.updateRestaurant(m, restaurant_id, operation, [])
+            return resp
 
         elif item =="images":
-            operation = rFuncs.updateImgs(restaurant_id, _json)
+            operation = rFuncs.updateImgs(_json)
             resp = rQueries.updateRestaurant(m, restaurant_id, operation, [])
             return resp
 
@@ -161,7 +164,7 @@ class RestaurantMealsItemItem(Resource):
 
         if item_item == "feedbacks":
             _json = request.json
-            operation = rFuncs.updateFeedback(item_index, _json)
+            operation = rFuncs.updateMealFeedback(item_index, _json)
             resp = rQueries.updateRestaurant(m, restaurant_id, operation, [])
         
         elif item_item == "images":

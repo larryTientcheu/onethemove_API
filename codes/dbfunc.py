@@ -86,7 +86,7 @@ class AuthFunctions():
         if email.lower() == old_email.lower(): 
             return new_email
         else:
-            abort(400, message="Old password doesn't match")
+            abort(400, message="Old Email doesn't match")
 
 class UserFunctions():
     def formatUpdateUser(self, _json):
@@ -223,7 +223,16 @@ class  RestaurantFunctions():
 
         return feedback
 
-    def updateFeedback(self, meal_index, _json):
+    def updateRestaurantFeedback(self, _json):
+        # json feedback is an array
+        if "feedbacks" not in _json.keys():
+            abort(400, message="The request feedback is not formated correctly")
+
+        _feedback = self.formatFeedback(_json['feedbacks'])
+        operation = {'$addToSet': {"feedbacks":{'$each': _feedback}}}
+        return operation
+
+    def updateMealFeedback(self, meal_index, _json):
         # json feedback is an array
         if "feedbacks" not in _json.keys():
             abort(400, message="The request feedback is not formated correctly")

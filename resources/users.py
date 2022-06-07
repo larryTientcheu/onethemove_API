@@ -64,7 +64,7 @@ class UserCredentials(Resource):
             newPassword = {"password": newPassword}
             resp = uQueries.updateUser(m, id, newPassword)
 
-        if credential == 'email':
+        elif credential == 'email':
             new_email = authFunc.formatUpdateUserEmail(m, id, _json)
             new_email = {"email": new_email}
             resp = uQueries.updateUser(m, id, new_email)
