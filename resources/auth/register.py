@@ -25,9 +25,13 @@ class RegisterUser(Resource):
         
         user = fAuth.formatRegisterUser(mU, _json)
         resp = qAuth.registerUser(mU, user)
-        resp = make_response("registered", 201)
         return resp
 
 class RegisterRestaurant(Resource):
     def post(self):
-        pass
+        _json = request.json
+        if 'email' not in _json.keys() or 'name' not in _json.keys() or 'password' not in _json.keys():
+            abort(400, message='The request is not formated correctly')
+        restaurant = fAuth.formatRegisterRestaurant(mR, _json)
+        resp = qAuth.registerRestaurant(mR, restaurant)
+        return resp

@@ -35,13 +35,34 @@ class AuthFunctions():
 
 
 
-    def registerRestaurant():
-        pass
+    def formatRegisterRestaurant(self, m, _json):
+           
+        _email = _json['email']
+        _name = _json['name']
+        restaurants = m.find({'email': _email})
+        func.abort_if_exist(restaurants)
+        restaurants = m.find({'name': _name})
+        func.abort_if_exist(restaurants)
+
+        _description = _json['description']
+        _pwd = _json['password']
+        _tags = _json['tags'] if 'tags' in _json.keys() else None
+        
+        # All the feilds Not above will be empty on creation.
+
+        if not _name or not _email or not _pwd:
+            abort(400, message="The request is not formated correctly name email and restaurant")
+        else:
+            _hashed_pwd = generate_password_hash(_pwd)
+            restaurant = {'name': _name, 'description': _description, 'email': _email, 'password': _hashed_pwd,
+                'tags': _tags
+                }
+            return restaurant
 
     def formatUpdateUserPassword(self, m, id, _json):
         user = m.find_one({'_id': ObjectId(id)})
         func.abort_if_not_exist(user, "user")
-        if 'old_password' not in _json.keys() and 'new_password' not in _json.keys():
+        if 'old_password' not in _json.keys() or 'new_password' not in _json.keys():
             abort(400, message="Not all the parameters were passed")
     
         hashed_old_password = user['password']
@@ -56,7 +77,7 @@ class AuthFunctions():
     def formatUpdateUserEmail(self, m, id, _json):
         user = m.find_one({'_id': ObjectId(id)})
         func.abort_if_not_exist(user, "user")
-        if 'old_email' not in _json.keys() and 'new_email' not in _json.keys():
+        if 'old_email' not in _json.keys() or 'new_email' not in _json.keys():
             abort(400, message="Not all the parameters were passed")
     
         email = user['email']
@@ -93,6 +114,7 @@ class  RestaurantFunctions():
         _email = _json['email']
         restaurants = m.find_one({'email': _email})
         func.abort_if_exist(restaurants)
+        #abort if name exists
         _name = _json['name']
         _description = _json['description']
         _pwd = _json['password']
@@ -110,21 +132,22 @@ class  RestaurantFunctions():
             return restaurant
 
     def formatUpdateRestaurant(self, _json):
-            if 'email' not in _json.keys() or 'name' not in _json.keys() or 'password' not in _json.keys():
+            if 'email' not in _json.keys() or 'name' not in _json.keys():
                 abort(400, message='The request is not formated correctly')
+
+            # Restaurant email and password must be specially checked before updating thus new resource
             _email = _json['email']
             _name = _json['name']
             _description = _json['description']
-            _pwd = _json['password']
+            
             _tags = _json['tags']
             
             # All the fields not here Will be updated on later
 
-            if not _name or not _email or not _pwd:
+            if not _name or not _email:
                 abort(400, message="The request is not formated correctly name email and restaurant")
             else:
-                _hashed_pwd = generate_password_hash(_pwd)
-                restaurant = {'name': _name, 'description': _description, 'email': _email, 'password': _hashed_pwd,
+                restaurant = {'name': _name, 'description': _description, 'email': _email,
                     'tags': _tags
                     }
                 return restaurant

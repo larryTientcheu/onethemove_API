@@ -25,12 +25,6 @@ class Restaurants(Resource):
         resp.mimetype = 'application/json'
         return resp
 
-    def post(self):
-        _json = request.json
-        restaurant = rFuncs.formatAddRestaurant(m,_json)
-        resp = rQueries.addRestaurant(m, restaurant)
-        return resp
-
 class Restaurant(Resource):
 
     def get(self, restaurant_id):
@@ -49,6 +43,54 @@ class Restaurant(Resource):
         operation = {'$set': restaurant}
         resp = rQueries.updateRestaurant(m,restaurant_id,operation,[])
         return resp
+
+
+class RestaurantCredentials(Resource):
+    def put(self, restaurant_id, credential):
+        _json = request.json
+        restaurant = m.find_one({'_id': ObjectId(restaurant_id)})
+        func.abort_if_not_exist(restaurant, "restaurant")
+
+        if credential == "name":
+            if 'name' not in _json.keys():
+                abort(400, message= "you must include a new restaurant name to update name")
+            _name = _json['name']
+            restaurants = m.find_one({'name': _name})
+            func.abort_if_exist(restaurants)
+            _name = {"name": _name}
+            resp = rQueries.updateRestaurantCredentials(m, restaurant_id, _name)
+            return resp
+            
+        elif credential == "email":
+            if 'email' not in _json.keys():
+                abort(400, message= "you must include a new restaurant email to update email")
+            _email = _json['email']
+            restaurants = m.find_one({'email':_email})
+            func.abort_if_exist(restaurants)
+            _email = {"email": _email}
+            resp = rQueries.updateRestaurantCredentials(m, restaurant_id, _email)
+            return resp
+
+        elif credential == "password":
+            if 'old_password' not in _json.keys() or 'new_password' not in _json.keys():
+                abort(400, message="Not all the password parameters were passed")
+
+            hashed_old_password = restaurant['password']
+            unhashed_old_password = _json['old_password']
+            newPassword = _json['new_password']
+            if func.checkPassword(hashed_old_password, unhashed_old_password):
+                newPassword = func.hashPassword(newPassword)
+                newPassword = {"password": newPassword}
+                resp = rQueries.updateRestaurantCredentials(m, restaurant_id, newPassword)
+                return resp
+            else:
+                abort(400, message="Old password doesn't match")
+
+
+
+
+
+
 
 class RestaurantItem(Resource):
 
@@ -94,7 +136,7 @@ class RestaurantItem(Resource):
             resp = rQueries.updateRestaurant(m, restaurant_id, operation, [])
             return resp
 
-        # elif item =="feedbacks":
+        # elif item =="feedbacks": for restaurant feedback
 
         elif item =="images":
             operation = rFuncs.updateImgs(restaurant_id, _json)

@@ -7,6 +7,10 @@ class AuthQueries():
         m.insert_one(user)
         return make_response("Registered", 201)
 
+    def registerRestaurant(self, m, restaurant):
+        m.insert_one(restaurant)
+        return make_response("Created", 201)
+
 
 class UserQueries():
     def updateUser(self, m, id, user):
@@ -18,11 +22,7 @@ class UserQueries():
 
 
 class RestaurantQueries():
-    def addRestaurant(self, m, restaurant):
-        m.insert_one(restaurant)
-        return make_response("Created", 201)
-
-
+   
     def updateRestaurant(self, m, id, operation, arrayFilters):
         m.update_one(
                 {'_id': ObjectId(id)},
@@ -31,6 +31,14 @@ class RestaurantQueries():
                 upsert=True
             )
 
+        return make_response("Updated", 200)
+
+    def updateRestaurantCredentials(self, m, id, credential):
+        m.update_one(
+                {'_id': ObjectId(id)},
+                {'$set': credential},
+                upsert = False
+        )
         return make_response("Updated", 200)
 
 class OrderQueries():
