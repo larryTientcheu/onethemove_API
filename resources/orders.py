@@ -24,8 +24,9 @@ def Order_setMongo(mongo):
 class Orders(Resource):
     def get(self):
         orders = m.find()
-        resp = dumps(orders)
-        return make_response(resp, 200)
+        resp = make_response(dumps(orders), 200)
+        resp.mimetype = 'application/json'
+        return resp
 
     def post(self):
         _json = request.json
@@ -36,8 +37,9 @@ class Order(Resource):
     def get (self, id):
         order = m.find_one({'_id': ObjectId(id)})
         func.abort_if_not_exist(order, "order")
-        resp = dumps(order)
-        return make_response(resp, 200)
+        resp = make_response(dumps(order), 200)
+        resp.mimetype = 'application/json'
+        return resp
 
     def put(self, id):
         _json = request.json
@@ -51,9 +53,11 @@ class Order(Resource):
         return resp
 
 class OrderDetails(Resource):
-    def get(self, id):
+    def get(self, id, detail):
         _json = request.json
-        if 'meal_portion' not in _json.keys():
+        if not detail:
             abort(400, message="A portion must be selected for the meal")
-        order = oFunc.formatDetailedOrder(m, id, _json['meal_portion'])
-        return make_response(dumps(order),200)
+        order = oFunc.formatDetailedOrder(m, id, detail)
+        resp = make_response(dumps(order), 200)
+        resp.mimetype = 'application/json'
+        return resp

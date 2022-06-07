@@ -340,7 +340,6 @@ class OrderFunctions():
             order_detailed[0]['meal'] = ordered_meal
             order_detailed[0]['meal_quantity'] = mQuantity
 
-            print(detail.lower())
             if detail.lower() != "small" and detail.lower() != "medium" and detail.lower() != "large":
                 abort(400, message="portion must be either small, medium or large")
             

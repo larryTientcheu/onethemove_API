@@ -20,7 +20,7 @@ rQueries = RestaurantQueries()
 
 class Restaurants(Resource):
     def get(self): # find all restaurants
-        restaurant = m.find()
+        restaurant = m.find({},{'password':0})
         resp = make_response(dumps(restaurant), 200)
         resp.mimetype = 'application/json'
         return resp
@@ -85,10 +85,6 @@ class RestaurantCredentials(Resource):
                 return resp
             else:
                 abort(400, message="Old password doesn't match")
-
-
-
-
 
 
 

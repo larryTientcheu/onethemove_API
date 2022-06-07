@@ -56,10 +56,6 @@ class User(Resource):
         return resp
         # DELETE Will be done
 
-# Resource to update email and password.
-# To update password email must be entered and 2 password fields
-# To update email, password must be entered. Not this might break sign in
-
 class UserCredentials(Resource):
     def put(self, id, credential):
         _json = request.json
@@ -75,11 +71,6 @@ class UserCredentials(Resource):
 
         return resp
             
-
-
-
-
-
 
 
 def formatAddress(_json): # This json is a basic json object look at notes

@@ -21,8 +21,7 @@ class RegisterUser(Resource):
     def post(self):
         _json = request.json
         if 'first_name' not in _json.keys() or 'email' not in _json.keys() or 'password' not in _json.keys():
-            abort(400, message="Not all the parameters are present")
-        
+            abort(400, message="Not all the parameters are present") 
         user = fAuth.formatRegisterUser(mU, _json)
         resp = qAuth.registerUser(mU, user)
         return resp
