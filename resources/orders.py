@@ -52,18 +52,32 @@ class Order(Resource):
         resp = oQueries.updateOrder(m, id, status)
         return resp
 
+#Get specific order detail
 class OrderDetails(Resource):
     def get(self, id):
-        order = oFunc.formatDetailedOrder(m, id)
+        order_detailed = oFunc.getOrderDetails(m, id)[0]
+        order = oFunc.formatDetailedOrder(order_detailed)
         resp = make_response(dumps(order), 200)
         resp.mimetype = 'application/json'
         return resp
 
+#Get User order detail
 class OrderEntityDetails(Resource):
     def get(self, entity, id):
         if entity == "user":
             order_detailed = oFunc.getOrderEntityDetails(m, entity, id)
-            resp = make_response(dumps(order_detailed), 200)
+            user_orders = []
+            for order in order_detailed:
+                user_orders.append(oFunc.formatDetailedOrder(order))
+            resp = make_response(dumps(user_orders), 200)
+        
+        elif entity == 'restaurant':
+            order_detailed = oFunc.getOrderEntityDetails(m, entity, id)
+            restaurant_orders = []
+            for order in order_detailed:
+                restaurant_orders.append(oFunc.formatDetailedOrder(order))
+            resp = make_response(dumps(restaurant_orders), 200)
+            
         resp.mimetype = 'application/json'
         return resp
 

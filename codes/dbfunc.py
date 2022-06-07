@@ -325,11 +325,11 @@ class OrderFunctions():
         return list(operation)
     
     def getOrderedMeal(self, order_detailed, mIndex):
-        meal = order_detailed[0]["Restaurant"][0]['meals'][mIndex]
+        meal = order_detailed["Restaurant"][0]['meals'][mIndex]
         return meal
     
     def getOrderedDrink(self, order_detailed, dIndex):
-        drink = order_detailed[0]["Restaurant"][0]['drinks'][dIndex]
+        drink = order_detailed["Restaurant"][0]['drinks'][dIndex]
         return drink
 
     def computeOrderedMealPrice(self, mQuantity, ordered_meal, detail):
@@ -340,37 +340,35 @@ class OrderFunctions():
         price = dQuantity*ordered_drink['price']
         return price
 
-    def formatDetailedOrder(self, m, id):
-        order_detailed = self.getOrderDetails(m, id)
+    def formatDetailedOrder(self, order_detailed):
 
-        if order_detailed[0]['meal'] is not None:
-            mIndex = order_detailed[0]['meal']['index']
-            mQuantity = order_detailed[0]['meal']['quantity']
-            mPortion = order_detailed[0]['meal']['portion']
+        if order_detailed['meal'] is not None:
+            mIndex = order_detailed['meal']['index']
+            mQuantity = order_detailed['meal']['quantity']
+            mPortion = order_detailed['meal']['portion']
             ordered_meal = self.getOrderedMeal(order_detailed, mIndex)
-            order_detailed[0]['restaurant_name'] = order_detailed[0]["Restaurant"][0]['name']
-            order_detailed[0]['meal'] = ordered_meal
-            order_detailed[0]['meal_quantity'] = mQuantity
+            order_detailed['restaurant_name'] = order_detailed["Restaurant"][0]['name']
+            order_detailed['meal'] = ordered_meal
+            order_detailed['meal']['quantity'] = mQuantity
 
             if mPortion.lower() != "small" and mPortion.lower() != "medium" and mPortion.lower() != "large":
                 abort(400, message="portion must be either small, medium or large")
             
-            order_detailed[0]['meal_portion'] = mPortion
+            order_detailed['meal']['portion'] = mPortion
             oMPrice = ordered_meal['portions'][mPortion]
-            order_detailed[0]['meal_price'] = oMPrice
+            order_detailed['meal']['price'] = oMPrice
+            order_detailed['meal'].pop('portions')
         
-        if order_detailed[0]['drink'] is not None:
+        if order_detailed['drink'] is not None:
 
-            dIndex = order_detailed[0]['drink']['index']
-            dQuantity = order_detailed[0]['drink']['quantity']
+            dIndex = order_detailed['drink']['index']
+            dQuantity = order_detailed['drink']['quantity']
             ordered_drink =  self.getOrderedDrink(order_detailed, dIndex)
-            oDPrice = ordered_drink['price']
-            order_detailed[0]['drink'] = ordered_drink
-            order_detailed[0]['drink_quantity'] = dQuantity
-            order_detailed[0]['drink_price'] = oDPrice
+            order_detailed['drink'] = ordered_drink
+            order_detailed['drink']['quantity'] = dQuantity
         
-        order_detailed[0].pop('Restaurant')
-        order_detailed[0]['meal'].pop('portions')
+        order_detailed.pop('Restaurant')
+        
         
         return order_detailed
 
