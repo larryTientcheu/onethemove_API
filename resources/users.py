@@ -1,6 +1,7 @@
+from ast import arg
 from flask import make_response
 from flask.globals import request
-from flask_restful import Resource, abort
+from flask_restful import Resource, abort, reqparse
 from bson.json_util import dumps
 from bson.objectid import ObjectId
 from numpy import ufunc
@@ -43,6 +44,10 @@ class User(Resource):
         return resp
 
     def put(self, id):
+        parser = reqparse.RequestParser()
+        parser.add_argument('username', required=True)
+        args = parser.parse_args()
+        print(args)
 
         _json = request.json
 

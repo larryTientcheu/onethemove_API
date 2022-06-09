@@ -2,7 +2,7 @@
 import imp
 from flask import Flask, jsonify, request
 from flask_pymongo import PyMongo
-from flask_restful import Api, Resource,reqparse,abort
+from flask_restful import Api
 from bson.json_util import dumps
 from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
