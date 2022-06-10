@@ -4,7 +4,6 @@ from flask.globals import request
 from flask_restful import Resource, abort, reqparse
 from bson.json_util import dumps
 from bson.objectid import ObjectId
-from numpy import ufunc
 from codes.functions import Functions
 from codes.dbfunc import AuthFunctions, UserFunctions
 from codes.queries import UserQueries
@@ -44,12 +43,13 @@ class User(Resource):
         return resp
 
     def put(self, id):
+        # add parsers just as an additional check for json as an update later
         parser = reqparse.RequestParser()
-        parser.add_argument('username', required=True)
+        parser.add_argument('first_name', required=True)
         args = parser.parse_args()
-        print(args)
-
         _json = request.json
+        #parameters = request.args # This is how you get request parameters
+        #print(parameters.get('first_name'))
 
         user = m.find_one({'_id': ObjectId(id)})
         func.abort_if_not_exist(user, "user")

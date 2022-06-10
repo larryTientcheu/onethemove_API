@@ -22,7 +22,7 @@ app.config['MONGO_URI'] = "mongodb://localhost:27017/quickmunch"
 m = PyMongo(app)
 
 User_setMongo(m)
-api.add_resource(Users,"/user", methods=['GET']) # get user. This query should be restricted only to The owner
+api.add_resource(Users,"/users", methods=['GET']) # get user. This query should be restricted only to The owner
 api.add_resource(User, "/user/<string:id>") # get a specific user and update
 api.add_resource(UserCredentials, "/user/<string:id>/credential/<string:credential>", methods=['PUT'])
 api.add_resource(U_Address, "/user/address/<string:id>/<int:a>") # get and update adrress, last argument specifies which address
@@ -30,7 +30,7 @@ api.add_resource(U_Address, "/user/address/<string:id>/<int:a>") # get and updat
 
 
 Restaurant_setMongo(m)
-api.add_resource(Restaurants, "/restaurant", methods=['GET'])
+api.add_resource(Restaurants, "/restaurants", methods=['GET'])
 api.add_resource(Restaurant, "/restaurant/<string:restaurant_id>", methods=['GET', 'PUT'])
 api.add_resource(RestaurantCredentials, "/restaurant/<string:restaurant_id>/credential/<string:credential>", methods=['PUT'])
 api.add_resource(RestaurantItem, "/restaurant/<string:restaurant_id>/<string:item>", methods=['POST','PUT'])
@@ -40,10 +40,10 @@ api.add_resource(RestaurantMealsItemItem, "/restaurant/<string:restaurant_id>/me
 
 
 Order_setMongo(m)
-api.add_resource(Orders, "/order")
+api.add_resource(Orders, "/orders")
 api.add_resource(Order, "/order/<string:id>")
 api.add_resource(OrderDetails, "/order/<string:id>/detail")
-api.add_resource(OrderEntityDetails, "/order/<string:entity>/<string:id>")
+api.add_resource(OrderEntityDetails, "/orders/<string:entity>/<string:id>")
 
 Login_setMongo(m)
 api.add_resource(Login, "/login")

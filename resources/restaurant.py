@@ -20,7 +20,13 @@ rQueries = RestaurantQueries()
 
 class Restaurants(Resource):
     def get(self): # find all restaurants
-        restaurant = m.find({},{'password':0})
+        parameters = request.args
+        param = parameters.get('item')
+        
+        if param == 'feedbacks':
+            restaurant = m.aggregate([{'$project':{'feedbacks':1, 'name':1, 'imgs':1}}])
+        else:
+            restaurant = m.find({},{'password':0})
         resp = make_response(dumps(restaurant), 200)
         resp.mimetype = 'application/json'
         return resp
@@ -138,7 +144,7 @@ class RestaurantItem(Resource):
             return resp
 
         elif item =="images":
-            operation = rFuncs.updateImgs(_json)
+            operation = rFuncs.updateImgs(restaurant_id, _json)
             resp = rQueries.updateRestaurant(m, restaurant_id, operation, [])
             return resp
 

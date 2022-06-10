@@ -64,6 +64,8 @@ class OrderDetails(Resource):
 #Get User order detail
 class OrderEntityDetails(Resource):
     def get(self, entity, id):
+        
+        resp = make_response("",404)
         if entity == "user":
             order_detailed = oFunc.getOrderEntityDetails(m, entity, id)
             if len(order_detailed) < 1:
@@ -72,6 +74,7 @@ class OrderEntityDetails(Resource):
             for order in order_detailed:
                 user_orders.append(oFunc.formatDetailedOrder(order))
             resp = make_response(dumps(user_orders), 200)
+            resp.mimetype = 'application/json'
         
         elif entity == 'restaurant':
             order_detailed = oFunc.getOrderEntityDetails(m, entity, id)
@@ -81,7 +84,7 @@ class OrderEntityDetails(Resource):
             for order in order_detailed:
                 restaurant_orders.append(oFunc.formatDetailedOrder(order))
             resp = make_response(dumps(restaurant_orders), 200)
-            
-        resp.mimetype = 'application/json'
+            resp.mimetype = 'application/json'
+        
         return resp
 
