@@ -333,14 +333,6 @@ class OrderFunctions():
         ])
         return list(operation)
     
-    def getOrderedMeal(self, order_detailed, mIndex):
-        meal = order_detailed["Restaurant"][0]['meals'][mIndex]
-        return meal
-    
-    def getOrderedDrink(self, order_detailed, dIndex):
-        drink = order_detailed["Restaurant"][0]['drinks'][dIndex]
-        return drink
-
     def computeOrderedMealPrice(self, mQuantity, ordered_meal, detail):
         price = mQuantity*ordered_meal['portions'][detail]
         return price
@@ -355,7 +347,8 @@ class OrderFunctions():
             mIndex = order_detailed['meal']['index']
             mQuantity = order_detailed['meal']['quantity']
             mPortion = order_detailed['meal']['portion']
-            ordered_meal = self.getOrderedMeal(order_detailed, mIndex)
+            #if restaurant or meal is deleted or changed this produces an error. so check if the restaurant or same meal still exists
+            ordered_meal = order_detailed["Restaurant"][0]['meals'][mIndex]
             order_detailed['restaurant_name'] = order_detailed["Restaurant"][0]['name']
             order_detailed['meal'] = ordered_meal
             order_detailed['meal']['quantity'] = mQuantity
@@ -372,7 +365,7 @@ class OrderFunctions():
 
             dIndex = order_detailed['drink']['index']
             dQuantity = order_detailed['drink']['quantity']
-            ordered_drink =  self.getOrderedDrink(order_detailed, dIndex)
+            ordered_drink =  order_detailed["Restaurant"][0]['drinks'][dIndex]
             order_detailed['drink'] = ordered_drink
             order_detailed['drink']['quantity'] = dQuantity
         

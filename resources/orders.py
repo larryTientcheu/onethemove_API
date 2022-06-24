@@ -72,7 +72,10 @@ class OrderEntityDetails(Resource):
                 abort(400, message="This user has no orders")  
             user_orders = []
             for order in order_detailed:
-                user_orders.append(oFunc.formatDetailedOrder(order))
+                try:
+                    user_orders.append(oFunc.formatDetailedOrder(order))
+                except:
+                    continue
             resp = make_response(dumps(user_orders), 200)
             resp.mimetype = 'application/json'
         
