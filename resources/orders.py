@@ -23,16 +23,25 @@ def Order_setMongo(mongo):
 
 class Orders(Resource):
     def get(self):
-        orders = m.find()
+        param = request.args
+        print (param)
+        if 'user' in param:
+            orders = m.find({'user': ObjectId(param['user'])})
+        elif 'restaurant' in param:
+            orders = m.find({'restaurant': ObjectId(param['restaurant'])})
+        else:
+            orders = m.find()
         resp = make_response(dumps(orders), 200)
         resp.mimetype = 'application/json'
         return resp
+
 
     def post(self):
         _json = request.json
         order = oFunc.formatAddOrder(mU, mR, _json)
         resp = oQueries.addOrder(m, order)
         return resp
+
 class Order(Resource):
     def get (self, id):
         order = m.find_one({'_id': ObjectId(id)})
@@ -52,42 +61,5 @@ class Order(Resource):
         resp = oQueries.updateOrder(m, id, status)
         return resp
 
-#Get specific order detail
-class OrderDetails(Resource):
-    def get(self, id):
-        order_detailed = oFunc.getOrderDetails(m, id)[0]
-        order = oFunc.formatDetailedOrder(order_detailed)
-        resp = make_response(dumps(order), 200)
-        resp.mimetype = 'application/json'
-        return resp
 
-#Get User order detail
-class OrderEntityDetails(Resource):
-    def get(self, entity, id):
-        
-        resp = make_response("",404)
-        if entity == "user":
-            order_detailed = oFunc.getOrderEntityDetails(m, entity, id)
-            if len(order_detailed) < 1:
-                abort(400, message="This user has no orders")  
-            user_orders = []
-            for order in order_detailed:
-                try:
-                    user_orders.append(oFunc.formatDetailedOrder(order))
-                except:
-                    continue
-            resp = make_response(dumps(user_orders), 200)
-            resp.mimetype = 'application/json'
-        
-        elif entity == 'restaurant':
-            order_detailed = oFunc.getOrderEntityDetails(m, entity, id)
-            if len(order_detailed) < 1:
-                abort(400, message="This restaurant has no orders")
-            restaurant_orders = []
-            for order in order_detailed:
-                restaurant_orders.append(oFunc.formatDetailedOrder(order))
-            resp = make_response(dumps(restaurant_orders), 200)
-            resp.mimetype = 'application/json'
-        
-        return resp
 

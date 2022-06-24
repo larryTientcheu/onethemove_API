@@ -267,12 +267,22 @@ class OrderFunctions():
             abort(400,  message='The order request is badly formatted. A meal or Drink must be included')
         else:
             if 'meal' in _json.keys():
+                #include mealname, meal price
                 if _json['meal'] is not None:
-                    if 'portion' not in _json['meal'].keys():
-                        abort(400,  message='A portion must be included when selecting a meal')
+                    if 'portion' not in _json['meal'].keys() or 'price' not in _json['meal'].keys() or 'name' not in _json['meal'].keys():
+                        abort(400,  message='Add order request is badly formatted')
+                    if 'quantity' not in _json['meal'].keys():
+                        abort(400,  message='Add order request is badly formatted')
+
                     _meal = _json['meal']
+
             if 'drink' in _json.keys():
                 if _json['drink'] is not None:
+                    if 'name' not in _json['drink'].keys() or 'price' not in _json['drink'].keys():
+                        abort(400,  message='A drink order request is badly formatted')
+                    if 'quantity' not in _json['meal'].keys():
+                        abort(400,  message='Add order request is badly formatted')
+                        
                     _drink = _json['drink']  
             
             if _meal is None and _drink is None:
@@ -281,14 +291,17 @@ class OrderFunctions():
 
     def formatAddOrder(self, mU, mR, _json):
         # Add check if user exists and restaurant exists
-
+        # include restaurant name
         if 'user' not in _json.keys() or 'restaurant' not in _json.keys() or 'address' not in _json.keys():
             abort(400,  message='request not formatted correctly')
         _user = ObjectId(_json['user'])
         func.abort_if_not_exist(mU.find_one({'_id': _user}), "user")
 
         _restaurant = ObjectId(_json['restaurant'])
-        func.abort_if_not_exist(mR.find_one({'_id': _restaurant}), "restaurant")
+        restaurant = mR.find_one({'_id': _restaurant})
+        func.abort_if_not_exist(restaurant, "restaurant")
+        rName = restaurant['name']
+        rEmail = restaurant['email']
 
         _address = _json['address']
         _meal, _drink = self.formatMealDrinkInOrder(_json)
@@ -297,7 +310,8 @@ class OrderFunctions():
         #if date fulfilled key is not present then order has not yet been fulfilled. This is updated only when the status is set to delivered.
         _status = 'in_cart'
 
-        order = {'user':_user, 'address':_address,'restaurant':_restaurant, 'meal': _meal, 'drink': _drink,
+        order = {'user':_user, 'address':_address,'restaurant':_restaurant,
+        'restaurant_name': rName, 'restaurant_email':rEmail, 'meal': _meal, 'drink': _drink,
          'date_created':_date_created, 'status':_status}
                 
         return order
@@ -318,72 +332,3 @@ class OrderFunctions():
             _date_fulfilled = datetime.today().astimezone()
             order = {'status': _status, 'date_fulfilled': _date_fulfilled}
         return order
-
-    def getOrderDetails(self, m, id):
-        operation = m.aggregate([{'$match': {'_id': ObjectId(id)}},
-            {'$lookup':{
-                'from': "restaurant",
-                'localField': "restaurant",
-                'foreignField': "_id",
-                'as': "Restaurant"
-            }
-            },{'$project':{"Restaurant.meals.feedbacks":0, "Restaurant.imgs":0,
-            "Restaurant.availability":0, "Restaurant.feedback":0, "Restaurant.tags":0,
-            "Restaurant.password":0, "Restaurant.description":0, "Restaurant.address":0}}
-        ])
-        return list(operation)
-    
-    def computeOrderedMealPrice(self, mQuantity, ordered_meal, detail):
-        price = mQuantity*ordered_meal['portions'][detail]
-        return price
-
-    def computeOrderedDrinkPrice(self, dQuantity, ordered_drink):
-        price = dQuantity*ordered_drink['price']
-        return price
-
-    def formatDetailedOrder(self, order_detailed):
-
-        if order_detailed['meal'] is not None:
-            mIndex = order_detailed['meal']['index']
-            mQuantity = order_detailed['meal']['quantity']
-            mPortion = order_detailed['meal']['portion']
-            #if restaurant or meal is deleted or changed this produces an error. so check if the restaurant or same meal still exists
-            ordered_meal = order_detailed["Restaurant"][0]['meals'][mIndex]
-            order_detailed['restaurant_name'] = order_detailed["Restaurant"][0]['name']
-            order_detailed['meal'] = ordered_meal
-            order_detailed['meal']['quantity'] = mQuantity
-
-            if mPortion.lower() != "small" and mPortion.lower() != "medium" and mPortion.lower() != "large":
-                abort(400, message="portion must be either small, medium or large")
-            
-            order_detailed['meal']['portion'] = mPortion
-            oMPrice = ordered_meal['portions'][mPortion]
-            order_detailed['meal']['price'] = oMPrice
-            order_detailed['meal'].pop('portions')
-        
-        if order_detailed['drink'] is not None:
-
-            dIndex = order_detailed['drink']['index']
-            dQuantity = order_detailed['drink']['quantity']
-            ordered_drink =  order_detailed["Restaurant"][0]['drinks'][dIndex]
-            order_detailed['drink'] = ordered_drink
-            order_detailed['drink']['quantity'] = dQuantity
-        
-        order_detailed.pop('Restaurant')
-        
-        
-        return order_detailed
-
-    def getOrderEntityDetails(self, m, entity, id):
-        operation = m.aggregate([{'$match': {entity: ObjectId(id)}},
-            {'$lookup':{
-                'from': "restaurant",
-                'localField': "restaurant",
-                'foreignField': "_id",
-                'as': "Restaurant"
-            }
-            },{'$project':{"Restaurant.meals.feedbacks":0, "Restaurant.imgs":0,
-            "Restaurant.availability":0, "Restaurant.feedback":0, "Restaurant.tags":0,
-            "Restaurant.password":0, "Restaurant.description":0, "Restaurant.address":0}}
-        ])
-        return list(operation)
