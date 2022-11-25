@@ -290,8 +290,7 @@ class OrderFunctions():
         return _meal, _drink
 
     def formatAddOrder(self, mU, mR, _json):
-        # Add check if user exists and restaurant exists
-        # include restaurant name
+        
         if 'user' not in _json.keys() or 'restaurant' not in _json.keys() or 'address' not in _json.keys():
             abort(400,  message='request not formatted correctly')
         _user = ObjectId(_json['user'])
@@ -328,6 +327,7 @@ class OrderFunctions():
             order = {'meal': _meal, 'drink': _drink, 'status': _status}
         else:
             order = {'status': _status}
+        #add payment type field dictionary, type: address if order status is purchased
         if _status.lower() == 'delivered':
             _date_fulfilled = datetime.today().astimezone()
             order = {'status': _status, 'date_fulfilled': _date_fulfilled}
